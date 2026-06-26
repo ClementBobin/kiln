@@ -1,0 +1,63 @@
+{
+  // ── ASP.NET Core — Clean Architecture + EF Core ──────────────────────
+  "name": "ASP.NET Core API — Clean Architecture + EF Core",
+  "description": "REST API with Clean Architecture layers (Domain, Application, Infrastructure, API), Entity Framework Core, and JWT authentication.",
+  "version": "1.0.0",
+  "tags": ["dotnet", "aspnet", "api", "clean-archi", "ef-core", "jwt"],
+
+  "source": {
+    "type": "local",
+    "files_dir": "./files"
+  },
+
+  "variables": [
+    { "key": "project_name", "label": "Project name",       "default": "MyApi" },
+    { "key": "namespace",    "label": "Root namespace",      "default": "MyApi" },
+    { "key": "dotnet_version", "label": ".NET version", "choices": ["8", "9"], "default": "8" },
+    { "key": "db_provider",   "label": "EF Core provider",  "choices": ["SqlServer", "PostgreSQL", "SQLite"], "default": "PostgreSQL" }
+  ],
+
+  "git": {
+    "init": true,
+    "initial_branch": "main",
+    "commit_message": "chore: initial scaffold via forge"
+  },
+
+  "code_conventions": {
+    "editorconfig": true,
+    "linter": {
+      "enabled": true,
+      "type": "roslyn",
+      "config_file": ".editorconfig"
+    },
+    "formatter": {
+      "enabled": true,
+      "type": "dotnet-format"
+    },
+    "commit_conventions": {
+      "enabled": true,
+      "tool": "commitlint",
+      "config_file": "commitlint.config.js",
+      "hooks": "husky"
+    }
+  },
+
+  "docker": {
+    "enabled": true,
+    "compose": true,
+    "dockerfile": "Dockerfile",
+    "target_stage": "development"
+  },
+
+  "cicd": {
+    "enabled": true,
+    "provider": "github-actions",
+    "workflows": ["build", "test", "lint"]
+  },
+
+  "post_init": [
+    { "cmd": "dotnet restore", "label": "Restore NuGet packages" },
+    { "cmd": "git add .",      "label": "Stage all files" },
+    { "cmd": "git commit -m 'chore: initial scaffold via forge'", "label": "Initial commit" }
+  ]
+}

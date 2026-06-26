@@ -1,0 +1,57 @@
+{
+  // ── Node.js — Express REST API ────────────────────────────────────────
+  "name": "Express.js — REST API",
+  "description": "Production-ready REST API with Express.js, TypeScript, Zod validation, Prisma ORM, and JWT authentication.",
+  "version": "1.0.0",
+  "tags": ["nodejs", "express", "typescript", "rest", "prisma", "jwt"],
+
+  "source": {
+    "type": "local",
+    "files_dir": "./files"
+  },
+
+  "variables": [
+    { "key": "project_name", "label": "Project name",       "default": "my-api" },
+    { "key": "description",  "label": "Short description",  "default": "Express REST API" },
+    { "key": "port",         "label": "HTTP port",          "default": "3000" },
+    { "key": "node_version", "label": "Node.js version",    "choices": ["20", "22"], "default": "20" }
+  ],
+
+  "git": {
+    "init": true,
+    "initial_branch": "main",
+    "commit_message": "chore: initial scaffold via forge"
+  },
+
+  "code_conventions": {
+    "editorconfig": true,
+    "linter": {
+      "enabled": true,
+      "type": "eslint",
+      "config_file": "eslint.config.mjs"
+    },
+    "formatter": {
+      "enabled": true,
+      "type": "prettier"
+    }
+  },
+
+  "docker": {
+    "enabled": true,
+    "compose": true,
+    "dockerfile": "Dockerfile",
+    "target_stage": "development"
+  },
+
+  "cicd": {
+    "enabled": true,
+    "provider": "github-actions",
+    "workflows": ["build", "test", "lint"]
+  },
+
+  "post_init": [
+    { "cmd": "npm install", "label": "Install dependencies" },
+    { "cmd": "git add .",   "label": "Stage all files" },
+    { "cmd": "git commit -m 'chore: initial scaffold via forge'", "label": "Initial commit" }
+  ]
+}

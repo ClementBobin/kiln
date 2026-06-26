@@ -1,0 +1,41 @@
+{
+  // ── React — Vite + TypeScript ─────────────────────────────────────────
+  "name": "React — Vite + TypeScript",
+  "description": "React SPA with Vite, TypeScript, Tailwind CSS, React Query, and React Router v6.",
+  "version": "1.0.0",
+  "tags": ["react", "vite", "typescript", "tailwind", "react-query", "spa"],
+
+  "source": {
+    "type": "local",
+    "files_dir": "./files"
+  },
+
+  "variables": [
+    { "key": "project_name", "label": "Project name",      "default": "my-app" },
+    { "key": "description",  "label": "Short description", "default": "A React application" }
+  ],
+
+  "git": {
+    "init": true,
+    "initial_branch": "main",
+    "commit_message": "chore: initial scaffold via forge"
+  },
+
+  "code_conventions": {
+    "editorconfig": true,
+    "linter": { "enabled": true, "type": "eslint", "config_file": "eslint.config.mjs" },
+    "formatter": { "enabled": true, "type": "prettier" }
+  },
+
+  "cicd": {
+    "enabled": true,
+    "provider": "github-actions",
+    "workflows": ["build", "lint", "type-check"]
+  },
+
+  "post_init": [
+    { "cmd": "npm install", "label": "Install dependencies" },
+    { "cmd": "git add .",   "label": "Stage all files" },
+    { "cmd": "git commit -m 'chore: initial scaffold via forge'", "label": "Initial commit" }
+  ]
+}
