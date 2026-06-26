@@ -171,28 +171,39 @@ class PreviewScreen(Screen):
             lines.append(f"  ✓ {len(post_init)} post-init command(s)")
 
         source = cfg.get("source", {})
-        if source.get("type") == "github":
-            repo = source.get("repo", "?")
-            lines.append(f"  ⇣ Clone GitHub: {repo}")
-            if self._github_ok is True:
-                lines.append("    [green]✓ Repo reachable[/green]")
-            elif self._github_ok is False:
-                lines.append("    [red]✗ Repo not reachable[/red]")
-            else:
-                lines.append("    [dim]⠋ Checking repo…[/dim]")
+        steps = source if isinstance(source, list) else [source]
+        for step in steps:
+            stype = step.get("type", "local")
+            if stype == "github":
+                repo = step.get("repo", "?")
+                lines.append(f"  ⇣ Clone GitHub: {repo}")
+                if self._github_ok is True:
+                    lines.append("    [green]✓ Repo reachable[/green]")
+                elif self._github_ok is False:
+                    lines.append("    [red]✗ Repo not reachable[/red]")
+                else:
+                    lines.append("    [dim]⠋ Checking repo…[/dim]")
+            elif stype == "command":
+                n = len(step.get("commands", []))
+                lines.append(f"  ▶ Run {n} command(s) directly (no template files)")
+            elif stype == "script":
+                lines.append(f"  ▶ Run script: {step.get('script', '?')}")
 
         return "\n".join(lines) if lines else "[dim]No extra actions configured.[/dim]"
 
     def _check_github_async(self) -> None:
         """Fire and forget GitHub availability check."""
         source = self._config.get("source", {})
-        if source.get("type") != "github":
+        steps = source if isinstance(source, list) else [source]
+        for step in steps:
+            if step.get("type") != "github":
+                continue
+            repo = step.get("repo", "")
+            if not repo:
+                continue
+            import asyncio
+            asyncio.get_event_loop().create_task(self._check_github(repo))
             return
-        repo = source.get("repo", "")
-        if not repo:
-            return
-        import asyncio
-        asyncio.get_event_loop().create_task(self._check_github(repo))
 
     async def _check_github(self, repo: str) -> None:
         try:

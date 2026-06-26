@@ -1,0 +1,44 @@
+{
+  // ── ASP.NET Core Minimal API (official `dotnet new` CLI) ──────────────
+  "name": "ASP.NET Core — Minimal API (dotnet CLI)",
+  "description": "Scaffolds with `dotnet new webapi` directly, then adds a solution file — no static template files.",
+  "version": "1.0.0",
+  "tags": ["dotnet", "api", "minimal-api", "cli", "no-template"],
+
+  "source": {
+    "type": "command",
+    // "creates_dir" defaults to true: dotnet's "-o" flag below creates the
+    // project folder itself, so Forge does not pre-create it.
+    "commands": [
+      {
+        "cmd": "dotnet new webapi -minimal -o {{project_name}} -n {{namespace}}",
+        "label": "Run dotnet CLI generator"
+      },
+      {
+        "cmd": "dotnet new sln -n {{project_name}} -o {{project_name}}",
+        "label": "Create solution file"
+      },
+      {
+        "cmd": "dotnet sln {{project_name}}/{{project_name}}.sln add {{project_name}}/{{project_name}}.csproj",
+        "label": "Add project to solution"
+      }
+    ]
+  },
+
+  "variables": [
+    { "key": "project_name", "label": "Project name",     "default": "MyApi" },
+    { "key": "namespace",    "label": "Root namespace",   "default": "MyApi" }
+  ],
+
+  "git": {
+    "init": true,
+    "initial_branch": "main",
+    "commit_message": "chore: initial scaffold via forge"
+  },
+
+  "post_init": [
+    { "cmd": "dotnet restore", "label": "Restore packages" },
+    { "cmd": "git add .",      "label": "Stage all files" },
+    { "cmd": "git commit -m 'chore: initial scaffold via forge'", "label": "Initial commit" }
+  ]
+}

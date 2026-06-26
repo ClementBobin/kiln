@@ -1,0 +1,72 @@
+{
+  "name": "ASP.NET Core API — Clean Architecture + EF Core",
+  "description": "REST API with Clean Architecture layers (Domain, Application, Infrastructure, Api)",
+  "version": "1.0.0",
+  "tags": ["dotnet", "aspnet", "api", "clean-archi"],
+
+  "structure": {
+    "Api" : {
+      "type": "web-api",
+      "folders": ["Configuration", "Controllers", "Extensions", "Interceptors", "Middleware"],
+      "references": ["Application", "Application.Tests", "Domain", "Infrastructure", "Infrastructure.Tests"]
+    },
+    "Api.Tests": {
+      "type": "unit-test",
+      "references": ["Api", "Domain", "Application"],
+      "lib": "xunit"
+    },
+    "Application": {
+      "type": "class-library",
+      "folders": ["Interfaces", "Services"],
+      "references": ["Domain", "Tools", "Infrastructure"]
+    },
+    "Application.Tests": {
+      "type": "unit-test",
+      "references": ["Domain", "Application", "Infrastructure"],
+      "lib": "xunit"
+    },
+    "Domain": {
+      "type": "class-library",
+      "folders": ["Dto", "Entities"]
+    },
+    "Infrastructure" : {
+      "type": "class-library",
+      "folders": ["Data", "Interfaces", "Repositories"],
+      "references": ["Domain", "Tools"]
+    },
+    "Infrastructure.Tests": {
+      "type": "unit-test",
+      "lib": "xunit",
+      "references": ["Domain", "Infrastructure"]
+    }
+  },
+
+  "variables": [
+    { "key": "project_name", "label": "Project name",       "default": "MyApi" },
+    { "key": "dotnet_version", "label": ".NET version", "choices": ["8", "9", "10"], "default": "10" },
+    { "key": "enable_test", "label": "Enable testing", "choices": ["true", "false"], "default": "false"}
+  ],
+
+  "code_conventions": {
+    "editorconfig": true,
+    "linter": {
+      "enabled": true,
+      "type": "roslyn",
+      "config_file": ".editorconfig"
+    },
+    "formatter": {
+      "enabled": true,
+      "type": "dotnet-format"
+    },
+    "commit_conventions": {
+      "enabled": true,
+      "tool": "commitlint",
+      "config_file": "commitlint.config.js",
+      "hooks": "husky"
+    }
+  },
+
+  "post_init": [
+    { "cmd": "dotnet restore", "label": "Restore NuGet packages" }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "name": "Android — Kotlin MVVM",
+  "description": "Android application with MVVM architecture, Jetpack Compose UI, Hilt dependency injection, Retrofit for networking, and Room for local persistence.",
+  "version": "1.0.0",
+  "tags": ["android", "kotlin", "mvvm", "compose", "hilt", "retrofit", "room"],
+
+  "structure": {
+    "data" : {
+      "folders": ["dto", "local", "remote", "repository"]
+    },
+    "di": {
+      "templates": ["kotlin_app-module"]
+    },
+    "domain": {
+      "folders": ["model", "repository", "usecase"]
+    },
+    "ui" : {
+      "folders": ["screens", "core"],
+      "templates": ["kotlin_ui_core"]
+    }
+  },
+
+  "variables": [
+    { "key": "package_name",   "label": "Package name (reverse domain)", "default": "com.example.myapp" },
+    { "key": "min_sdk",        "label": "Minimum SDK",          "choices": ["26", "28", "30", "33"], "default": "28" },
+    { "key": "target_sdk",     "label": "Target SDK",           "choices": ["34", "35"],             "default": "34" },
+    { "key": "kotlin_version", "label": "Kotlin version",       "choices": ["1.9", "2.0"],           "default": "2.0" }
+  ],
+
+  "code_conventions": {
+    "editorconfig": true,
+    "linter": {
+      "enabled": true,
+      "type": "ktlint",
+      "config_file": ".editorconfig"
+    },
+    "formatter": {
+      "enabled": true,
+      "type": "ktlint"
+    },
+    "commit_conventions": {
+      "enabled": true,
+      "tool": "commitlint",
+      "config_file": "commitlint.config.js",
+      "hooks": "husky"
+    }
+  }
+}

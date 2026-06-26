@@ -1,0 +1,29 @@
+{
+  "name": "React — Vite + TypeScript",
+  "description": "React SPA with Vite, TypeScript, Tailwind CSS, React Query, and React Router v6.",
+  "version": "1.0.0",
+  "tags": ["react", "vite", "typescript", "tailwind", "react-query", "spa"],
+
+  "source": {
+    "type": "command",
+    "commands": [
+      {
+        "cmd": "npm install prisma @types/pg --save-dev && npm install @prisma/client @prisma/adapter-pg pg dotenv",
+        "label": "Run Vite CLI generator"
+      }
+    ]
+  },
+
+  "variables": [
+    { "key": "db_con" },
+  ],
+
+  "cicd": {
+    "workflows": ["type-check"]
+  },
+
+  "post_init": [
+    { "cmd": "npx prisma", "label": "" },
+    { "cmd": "npx prisma init --output ../generated/prisma", "label": "" }
+  ]
+}

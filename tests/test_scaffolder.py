@@ -199,6 +199,184 @@ class TestPreviewTree:
         assert len(lines) == 1
         assert "no local files" in lines[0] or "not found" in lines[0]
 
+    def test_command_source(self, tmp_path: Path) -> None:
+        config = {
+            "source": {
+                "type": "command",
+                "commands": [{"cmd": "npm create vite@latest {{project_name}}", "label": "Run Vite"}],
+            }
+        }
+        lines = preview_tree(config, tmp_path)
+        combined = " ".join(lines)
+        assert "Command" in combined
+        assert "npm create vite" in combined
+
+    def test_script_source(self, tmp_path: Path) -> None:
+        config = {"source": {"type": "script", "script": "./scaffold.sh", "args": ["{{project_name}}"]}}
+        lines = preview_tree(config, tmp_path)
+        combined = " ".join(lines)
+        assert "Script" in combined
+        assert "scaffold.sh" in combined
+
+    def test_multi_step_source(self, tmp_path: Path) -> None:
+        files_dir = tmp_path / "files"
+        files_dir.mkdir()
+        (files_dir / "README.md").write_text("hi")
+        config = {
+            "source": [
+                {"type": "command", "commands": [{"cmd": "echo hi"}]},
+                {"type": "local", "files_dir": "./files"},
+            ]
+        }
+        lines = preview_tree(config, tmp_path)
+        combined = " ".join(lines)
+        assert "[1]" in combined and "[2]" in combined
+        assert "README.md" in combined
+
+
+# ------------------------------------------------------------------ #
+# scaffold — command / script source types
+# ------------------------------------------------------------------ #
+
+class TestScaffoldCommandAndScript:
+    @pytest.mark.asyncio
+    async def test_command_source_creates_project(self, tmp_path: Path) -> None:
+        from forge.engine.scaffolder import scaffold
+
+        config_dir = tmp_path / "template"
+        config_dir.mkdir()
+        config = {
+            "source": {
+                "type": "command",
+                "commands": [
+                    {"cmd": "mkdir -p {{project_name}} && echo hello > {{project_name}}/marker.txt", "label": "Create"}
+                ],
+            },
+            "git": {"init": False},
+            "post_init": [],
+        }
+        output = tmp_path / "output"
+        output.mkdir()
+
+        statuses = []
+        async for status, _msg in scaffold(
+            config=config,
+            config_path=config_dir,
+            variables={"project_name": "CmdApp"},
+            output_dir=output,
+        ):
+            statuses.append(status)
+
+        assert "error" not in statuses
+        marker = output / "CmdApp" / "marker.txt"
+        assert marker.exists()
+        assert marker.read_text().strip() == "hello"
+
+    @pytest.mark.asyncio
+    async def test_command_source_missing_dir_is_error(self, tmp_path: Path) -> None:
+        from forge.engine.scaffolder import scaffold
+
+        config_dir = tmp_path / "template"
+        config_dir.mkdir()
+        config = {
+            "source": {
+                "type": "command",
+                # Does NOT actually create the project directory.
+                "commands": [{"cmd": "echo nothing", "label": "noop"}],
+            },
+            "git": {"init": False},
+            "post_init": [],
+        }
+        output = tmp_path / "output"
+        output.mkdir()
+
+        statuses = []
+        async for status, _msg in scaffold(
+            config=config,
+            config_path=config_dir,
+            variables={"project_name": "Ghost"},
+            output_dir=output,
+        ):
+            statuses.append(status)
+
+        assert "error" in statuses
+
+    @pytest.mark.asyncio
+    async def test_script_source_runs_with_args_and_env(self, tmp_path: Path) -> None:
+        from forge.engine.scaffolder import scaffold
+
+        config_dir = tmp_path / "template"
+        config_dir.mkdir()
+        script = config_dir / "scaffold.sh"
+        script.write_text(
+            "#!/usr/bin/env bash\n"
+            'mkdir -p "$1"\n'
+            'echo "$FORGE_VAR_PORT" > "$1/port.txt"\n',
+            encoding="utf-8",
+        )
+
+        config = {
+            "source": {
+                "type": "script",
+                "script": "./scaffold.sh",
+                "args": ["{{project_name}}"],
+            },
+            "git": {"init": False},
+            "post_init": [],
+        }
+        output = tmp_path / "output"
+        output.mkdir()
+
+        statuses = []
+        async for status, _msg in scaffold(
+            config=config,
+            config_path=config_dir,
+            variables={"project_name": "ScriptApp", "port": "4242"},
+            output_dir=output,
+        ):
+            statuses.append(status)
+
+        assert "error" not in statuses
+        port_file = output / "ScriptApp" / "port.txt"
+        assert port_file.exists()
+        assert port_file.read_text().strip() == "4242"
+
+    @pytest.mark.asyncio
+    async def test_multi_step_command_then_local(self, tmp_path: Path) -> None:
+        """command step creates the dir, local step overlays extra files on top."""
+        from forge.engine.scaffolder import scaffold
+
+        config_dir = tmp_path / "template"
+        files_dir = config_dir / "files"
+        files_dir.mkdir(parents=True)
+        (files_dir / "EXTRA.md").write_text("extra", encoding="utf-8")
+
+        config = {
+            "source": [
+                {
+                    "type": "command",
+                    "commands": [{"cmd": "mkdir -p {{project_name}}", "label": "Create dir"}],
+                },
+                {"type": "local", "files_dir": "./files"},
+            ],
+            "git": {"init": False},
+            "post_init": [],
+        }
+        output = tmp_path / "output"
+        output.mkdir()
+
+        statuses = []
+        async for status, _msg in scaffold(
+            config=config,
+            config_path=config_dir,
+            variables={"project_name": "ComboApp"},
+            output_dir=output,
+        ):
+            statuses.append(status)
+
+        assert "error" not in statuses
+        assert (output / "ComboApp" / "EXTRA.md").exists()
+
 
 # ------------------------------------------------------------------ #
 # scaffold (async, integration-light)

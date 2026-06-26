@@ -155,19 +155,29 @@ async def run_command(
     cmd: str,
     cwd: Path,
     label: str,
+    env: dict[str, str] | None = None,
 ) -> AsyncIterator[str]:
     """
     Run an arbitrary shell command inside *cwd*, yielding output lines.
     Raises GitError (reusing for generic subprocess errors) on failure.
+
+    *env*, if given, is merged on top of the current process environment —
+    useful for exposing template variables (e.g. FORGE_VAR_PROJECT_NAME) to
+    commands and scripts.
     """
-    import shlex
     yield f"▶ {label}"
+
+    full_env = None
+    if env:
+        import os
+        full_env = {**os.environ, **env}
 
     proc = await asyncio.create_subprocess_shell(
         cmd,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.STDOUT,
         cwd=str(cwd),
+        env=full_env,
     )
 
     assert proc.stdout is not None

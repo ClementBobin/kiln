@@ -1,0 +1,61 @@
+{
+  "name": "Next.js 14 — App Router",
+  "description": "Next.js application using the App Router, Tailwind CSS, TypeScript",
+  "version": "1.0.0",
+  "tags": ["react", "nextjs", "typescript", "app-router"],
+
+  "source": {
+    "type": "command",
+    "commands": [
+      {
+        "cmd": "npx create-next-app@latest {{project_name}}",
+        "label": "Run Nextjs CLI generator"
+      }
+    ]
+  },
+
+  "structure": {
+    "templates": ["react_structure"],
+    "app": {
+      "folders": ["api"]
+    }
+  },
+
+  "variables": [
+    { "key": "project_name", "label": "Project name",    "default": "my-app" },
+    { "key": "author",       "label": "Author name",     "default": "Developer" },
+    { "key": "description",  "label": "Short description","default": "A Next.js application" },
+    { "key": "node_version", "label": "Node.js version", "choices": ["20", "22"], "default": "22" }
+  ],
+
+  "code_conventions": {
+    "editorconfig": true,
+    "linter": {
+      "enabled": true,
+      "type": "eslint",
+      "config_file": "eslint.config.mjs"
+    },
+    "formatter": {
+      "enabled": true,
+      "type": "prettier"
+    },
+    "commit_conventions": {
+      "enabled": true,
+      "tool": "commitlint",
+      "config_file": "commitlint.config.js",
+      "hooks": "husky"
+    }
+  },
+
+  "docker": {
+    "target_stage": "development"
+  },
+
+  "cicd": {
+    "workflows": ["type-check"]
+  },
+
+  "post_init": [
+    { "cmd": "npm install", "label": "Install dependencies" }
+  ]
+}

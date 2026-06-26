@@ -1,25 +1,31 @@
 {
-  // ── React — Vite + TypeScript ─────────────────────────────────────────
   "name": "React — Vite + TypeScript",
   "description": "React SPA with Vite, TypeScript, Tailwind CSS, React Query, and React Router v6.",
   "version": "1.0.0",
   "tags": ["react", "vite", "typescript", "tailwind", "react-query", "spa"],
 
   "source": {
-    "type": "local",
-    "files_dir": "./files"
+    "type": "command",
+    "commands": [
+      {
+        "cmd": "npm create vite@latest {{project_name}}",
+        "label": "Run Vite CLI generator"
+      }
+    ]
   },
+
+  "structure": [
+    {"src": {
+      "templates": ["react_structure"]
+    }},
+    "api",
+    "pages"
+  ],
 
   "variables": [
     { "key": "project_name", "label": "Project name",      "default": "my-app" },
     { "key": "description",  "label": "Short description", "default": "A React application" }
   ],
-
-  "git": {
-    "init": true,
-    "initial_branch": "main",
-    "commit_message": "chore: initial scaffold via forge"
-  },
 
   "code_conventions": {
     "editorconfig": true,
@@ -28,14 +34,10 @@
   },
 
   "cicd": {
-    "enabled": true,
-    "provider": "github-actions",
-    "workflows": ["build", "lint", "type-check"]
+    "workflows": ["type-check"]
   },
 
   "post_init": [
-    { "cmd": "npm install", "label": "Install dependencies" },
-    { "cmd": "git add .",   "label": "Stage all files" },
-    { "cmd": "git commit -m 'chore: initial scaffold via forge'", "label": "Initial commit" }
+    { "cmd": "npm install", "label": "Install dependencies" }
   ]
 }

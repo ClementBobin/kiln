@@ -1,0 +1,84 @@
+{
+  "name": "ASP.NET Core API — Clean Architecture + EF Core",
+  "description": "REST API with Clean Architecture layers (Business, Business.Contracts, Entity, EntitiesContext, Repository, Repository.Contracts, Api)",
+  "version": "1.0.0",
+  "tags": ["dotnet", "aspnet", "api", "clean-archi"],
+
+  "structure": {
+    "Api": {
+      "type": "web-api",
+      "folders": ["Configuration", "Controllers", "Extensions", "Interceptors", "Middleware"],
+      "references": ["Business", "Business.Contracts", "Repository", "Repository.Contracts", "Entity"]
+    },
+    "Api.Tests": {
+      "type": "unit-test",
+      "references": ["Api", "Business.Contracts"],
+      "lib": "xunit"
+    },
+    "Business": {
+      "type": "class-library",
+      "folders": ["Seeds"],
+      "references": ["Business.Contracts", "Entity", "Repository.Contracts"]
+    },
+    "Business.Contracts": {
+      "type": "class-library",
+      "folders": ["DTO"],
+      "references": ["Entity"]
+    },
+    "Business.Tests": {
+      "type": "unit-test",
+      "references": ["Business", "Business.Contracts"],
+      "lib": "xunit"
+    },
+    "Entity": {
+      "type": "class-library",
+      "folders": ["Fixtures"]
+    },
+    "EntitiesContext": {
+      "type": "class-library",
+      "references": ["Entity"]
+    },
+    "Repository": {
+      "type": "class-library",
+      "references": ["Repository.Contracts", "Entity", "EntitiesContext"]
+    },
+    "Repository.Contracts": {
+      "type": "class-library",
+      "references": ["Entity"]
+    },
+    "Repository.Tests": {
+      "type": "unit-test",
+      "lib": "xunit",
+      "references": ["Repository", "Entity", "EntitiesContext"]
+    }
+  },
+
+  "variables": [
+    { "key": "project_name", "label": "Project name", "default": "MyApi" },
+    { "key": "dotnet_version", "label": ".NET version", "choices": ["8", "9", "10"], "default": "10" },
+    { "key": "enable_test", "label": "Enable testing", "choices": ["true", "false"], "default": "false" }
+  ],
+
+  "code_conventions": {
+    "editorconfig": true,
+    "linter": {
+      "enabled": true,
+      "type": "roslyn",
+      "config_file": ".editorconfig"
+    },
+    "formatter": {
+      "enabled": true,
+      "type": "dotnet-format"
+    },
+    "commit_conventions": {
+      "enabled": true,
+      "tool": "commitlint",
+      "config_file": "commitlint.config.js",
+      "hooks": "husky"
+    }
+  },
+
+  "post_init": [
+    { "cmd": "dotnet restore", "label": "Restore NuGet packages" }
+  ]
+}
