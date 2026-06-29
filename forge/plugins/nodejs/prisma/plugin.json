@@ -17,24 +17,27 @@
     "dotenv"
   ],
 
+  "pre_apply": [
+    {
+      "cmd": "npx prisma init --output {{prisma_output_dir}}",
+      "label": "Initialise Prisma schema"
+    }
+  ]
+
   "apply": {
     "type": "script",
     "file": "setup_prisma.py",
-    "runtime": "python3"
+    "runtime": "python3",
+    "install_deps_from_stdout": {
+      "marker": "INSTALL_DEPS:",
+      "description": "Adapter + sqlcommenter packages selected interactively by the user"
+    }
   },
 
   "post_apply": [
     {
-      "cmd": "npx prisma init --output {{prisma_output_dir}}",
-      "label": "Initialise Prisma schema"
-    },
-    {
       "cmd": "python3 setup_prisma.py",
       "label": "Configure adapter, schema and lib/prisma.ts"
-    },
-    {
-      "cmd": "[ -f .prisma-extra-deps ] && npm install $(cat .prisma-extra-deps | tr '\\n' ' ') || true",
-      "label": "Install adapter dependencies"
     }
   ]
 }

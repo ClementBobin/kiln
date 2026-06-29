@@ -11,6 +11,7 @@ Prisma ORM setup script.
 import os
 import sys
 import re
+import subprocess
 
 # ── DB catalogue ────────────────────────────────────────────────────────────
 
@@ -82,8 +83,10 @@ DATABASES = [
         "adapter_pkg": "@prisma/adapter-better-sqlite3",
         "adapter_import": "PrismaBetterSqlite3",
         "adapter_from": "@prisma/adapter-better-sqlite3",
-        "adapter_init": 'new PrismaBetterSqlite3({ url: "file:./prisma/dev.db" })',
-        "env_vars": {},
+        "adapter_init": 'new PrismaBetterSqlite3({ url: process.env.DATABASE_URL })',
+        "env_vars": {
+            "DATABASE_URL": "file:./prisma/dev.db"
+        },
         "extra_deps": ["better-sqlite3", "@types/better-sqlite3"],
     },
     {
@@ -141,6 +144,29 @@ DATABASES = [
         "extra_comment": (
             "// Note: `env.DB` is the D1 binding defined in your wrangler.toml.\n"
             "// This adapter only works inside a Cloudflare Worker.\n"
+        ),
+    },
+]
+
+# ── SQL commenter plugins catalogue ─────────────────────────────────────────
+
+SQL_COMMENT_PLUGINS = [
+    {
+        "label": "Query tags  – tag queries with route/requestId via AsyncLocalStorage",
+        "pkg": "@prisma/sqlcommenter-query-tags",
+        "import_name": "queryTags",
+        "import_from": "@prisma/sqlcommenter-query-tags",
+        "call": "queryTags()",
+    },
+    {
+        "label": "Trace context – attach W3C traceparent for distributed tracing",
+        "pkg": "@prisma/sqlcommenter-trace-context",
+        "import_name": "traceContext",
+        "import_from": "@prisma/sqlcommenter-trace-context",
+        "call": "traceContext()",
+        "note": (
+            "  // traceContext() requires @prisma/instrumentation to be configured.\n"
+            "  // The traceparent is only injected when a span is active and sampled.\n"
         ),
     },
 ]
@@ -275,7 +301,7 @@ def patch_schema(schema_path: str, output_dir: str, provider: str) -> None:
     write_file(schema_path, content)
 
 
-def build_prisma_ts(db: dict, output_dir: str) -> str:
+def build_prisma_ts(db: dict, output_dir: str, plugins: list[dict]) -> str:
     extra_comment = db.get("extra_comment", "")
     adapter_init  = db["adapter_init"]
 
@@ -295,16 +321,40 @@ def build_prisma_ts(db: dict, output_dir: str) -> str:
     else:
         indented = lines[0]
 
-    return f"""\
-import {{ {db["adapter_import"]} }} from "{db["adapter_from"]}";
-import {{ PrismaClient }} from "{output_dir}";
-{extra_comment}
-const adapter = {indented};
+    # Plugin imports block
+    plugin_imports = ""
+    if plugins:
+        plugin_imports = "\n".join(
+            f'import {{ {p["import_name"]} }} from "{p["import_from"]}";'
+            for p in plugins
+        ) + "\n"
 
-const prisma = new PrismaClient({{ adapter }});
+    # PrismaClient options
+    comments_lines = ""
+    if plugins:
+        # Inline any notes as indented comments, then the comments: key
+        note_lines = "".join(
+            f"  {line.strip()}\n"
+            for p in plugins
+            for line in p.get("note", "").splitlines()
+            if line.strip()
+        )
+        calls = ", ".join(p["call"] for p in plugins)
+        comments_lines = f"{note_lines}  comments: [{calls}],\n"
+    nl = "\n"
+    client_opts = f"{{{nl}  adapter,{nl}{comments_lines}}}"
 
-export default prisma;
-"""
+    lines_out = [
+        f'import {{ {db["adapter_import"]} }} from "{db["adapter_from"]}";\n',
+        plugin_imports,
+        f'import {{ PrismaClient }} from "{output_dir}";\n',
+        (f"{extra_comment}\n" if extra_comment else "\n"),
+        f"const adapter = {indented};\n\n",
+        f"const prisma = new PrismaClient({client_opts});\n\n",
+        "export default prisma;\n",
+    ]
+    return "".join(lines_out)
+
 
 
 def build_env_example(db: dict) -> str:
@@ -333,7 +383,23 @@ def main() -> None:
     raw = input(f"\nGenerated client output dir [{default_output}]: ").strip()
     output_dir = raw if raw else default_output
 
-    # 3. Derive paths
+    # 3. SQL commenter plugins
+    print("\nSQL commenter plugins add metadata to queries (optional).")
+    print("Enter space-separated numbers to enable, or press Enter to skip:")
+    for i, p in enumerate(SQL_COMMENT_PLUGINS, 1):
+        print(f"  {i}. {p['label']}")
+    raw_plugins = input("Your choice(s): ").strip()
+    selected_plugins: list[dict] = []
+    if raw_plugins:
+        seen: set[int] = set()
+        for tok in raw_plugins.split():
+            if tok.isdigit():
+                idx = int(tok) - 1
+                if 0 <= idx < len(SQL_COMMENT_PLUGINS) and idx not in seen:
+                    selected_plugins.append(SQL_COMMENT_PLUGINS[idx])
+                    seen.add(idx)
+
+    # 4. Derive paths
     schema_path = os.path.join("prisma", "schema.prisma")
     config_path = "prisma.config.ts"
     lib_dir  = detect_lib_dir()
@@ -342,42 +408,42 @@ def main() -> None:
 
     print(f"\n── Writing files for [{db['label']}] ──")
 
-    # 4. prisma.config.ts
+    # 9. prisma.config.ts
     write_file(config_path, build_prisma_config(output_dir, db["provider"]))
 
-    # 5. schema.prisma — patch if it already exists, create if not
+    # 9. schema.prisma — patch if it already exists, create if not
     if os.path.exists(schema_path):
         print(f"  ↻ patching existing {schema_path}")
         patch_schema(schema_path, output_dir, db["provider"])
     else:
         write_file(schema_path, build_schema_prisma(output_dir, db["provider"]))
 
-    # 6. lib/prisma.ts
-    write_file(lib_path, build_prisma_ts(db, output_dir))
+    # 9. lib/prisma.ts
+    write_file(lib_path, build_prisma_ts(db, output_dir, selected_plugins))
 
-    # 7. .env.example
+    # 9. .env.example
     write_file(env_example, build_env_example(db))
 
-    # 8. Emit the extra npm dependencies the runner should install
-    all_deps = [db["adapter_pkg"]] + db.get("extra_deps", [])
-    print("\n── Additional npm dependencies needed ──")
-    for dep in all_deps:
-        print(f"  • {dep}")
-
-    # Write a machine-readable file so the template runner can pick them up
-    deps_file = ".prisma-extra-deps"
-    with open(deps_file, "w") as f:
-        f.write("\n".join(all_deps) + "\n")
-    print(f"\n  ✔ dependency list written to {deps_file}")
+    # 9. Install adapter + plugin packages
+    plugin_pkgs = [p["pkg"] for p in selected_plugins]
+    all_deps = [db["adapter_pkg"]] + db.get("extra_deps", []) + plugin_pkgs
+    print(f"\n── Installing {len(all_deps)} package(s): {' '.join(all_deps)} ──")
+    result = subprocess.run(
+        ["npm", "install"] + all_deps,
+        check=False,
+    )
+    if result.returncode != 0:
+        print(f"  ⚠ npm install exited with code {result.returncode}. Run manually:")
+        print(f"    npm install {' '.join(all_deps)}")
+    else:
+        print("  ✔ packages installed")
 
     print("\n✅  Done! Next steps:")
     print("  1. Copy .env.example → .env and fill in your credentials")
-    if all_deps:
-        print(f"  2. Install adapter: npm install {' '.join(all_deps)}")
-    print("  3. Run: npx prisma migrate dev   (or prisma db pull for existing DBs)")
-    print("  4. Run: npx prisma generate")
+    print("  2. Run: npx prisma migrate dev   (or prisma db pull for existing DBs)")
+    print("  3. Run: npx prisma generate")
     import_path = lib_path.replace(os.sep, '/').removesuffix('.ts')
-    print(f"  5. Import prisma from '{import_path}' in your app")
+    print(f"  4. Import prisma from '{import_path}' in your app")
 
 
 if __name__ == "__main__":
