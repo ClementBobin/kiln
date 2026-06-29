@@ -1,0 +1,47 @@
+{
+  "name": "nextjs-t3-app",
+  "description": "Next.js application using the App Router, Tailwind CSS, TypeScript and tRPC",
+  "version": "1.0.0",
+  "tags": ["react", "nextjs", "typescript", "app-router", "api"],
+
+  "source": {
+    "type": "command",
+    "commands": [
+      {
+        "cmd": "npm create t3-app@latest",
+        "label": "Run T3 CLI generator"
+      }
+    ]
+  },
+
+  "code_conventions": {
+    "editorconfig": true,
+    "linter": {
+      "enabled": true,
+      "type": "eslint",
+      "config_file": "eslint.config.mjs"
+    },
+    "formatter": {
+      "enabled": true,
+      "type": "prettier"
+    },
+    "commit_conventions": {
+      "enabled": true,
+      "tool": "commitlint",
+      "config_file": "commitlint.config.js",
+      "hooks": "husky"
+    }
+  },
+
+  "docker": {
+    "target_stage": "development"
+  },
+
+  "cicd": {
+    "workflows": ["type-check"]
+  },
+
+  "post_init": [
+    { "cmd": "npm install", "label": "Install dependencies" }
+  ]
+}

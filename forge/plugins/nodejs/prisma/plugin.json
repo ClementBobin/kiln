@@ -22,22 +22,10 @@
       "cmd": "npx prisma init --output {{prisma_output_dir}}",
       "label": "Initialise Prisma schema"
     }
-  ]
+  ],
 
   "apply": {
     "type": "script",
-    "file": "setup_prisma.py",
-    "runtime": "python3",
-    "install_deps_from_stdout": {
-      "marker": "INSTALL_DEPS:",
-      "description": "Adapter + sqlcommenter packages selected interactively by the user"
-    }
-  },
-
-  "post_apply": [
-    {
-      "cmd": "python3 setup_prisma.py",
-      "label": "Configure adapter, schema and lib/prisma.ts"
-    }
-  ]
+    "file": "setup_prisma.py"
+  }
 }
