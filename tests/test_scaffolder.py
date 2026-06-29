@@ -35,7 +35,7 @@ class TestInterpolateString:
 
     def test_missing_key_keeps_placeholder(self) -> None:
         result = interpolate_string("Hello {{missing}}!", {})
-        assert result == "Hello {{missing}}!"
+        assert result == "Hello {{ missing }}!"
 
     def test_no_placeholders(self) -> None:
         result = interpolate_string("Hello World!", {"name": "X"})
@@ -448,3 +448,182 @@ class TestScaffold:
             statuses.append(status)
 
         assert "error" in statuses
+
+
+# ------------------------------------------------------------------ #
+# scaffold — always-on git, "extras" (dockerfile/compose/cicd), and
+# interactive step_runner injection
+# ------------------------------------------------------------------ #
+
+class _RecordingRunner:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, Path, str, dict]] = []
+
+    async def __call__(self, cmd: str, cwd: Path, label: str, env: dict) -> int:
+        self.calls.append((cmd, cwd, label, env))
+        return 0
+
+
+class TestScaffoldAlwaysGit:
+    @pytest.mark.asyncio
+    async def test_git_initialized_and_committed_even_without_git_block(self, tmp_path: Path) -> None:
+        from forge.engine.scaffolder import scaffold
+
+        config_dir = tmp_path / "template"
+        files_dir = config_dir / "files"
+        files_dir.mkdir(parents=True)
+        (files_dir / "a.txt").write_text("x")
+
+        # Deliberately omit "git" entirely — it must still happen.
+        config = {"source": {"type": "local", "files_dir": "./files"}}
+        output = tmp_path / "output"
+        output.mkdir()
+
+        statuses = []
+        async for status, _msg in scaffold(
+            config=config, config_path=config_dir,
+            variables={"project_name": "GitAlwaysApp"}, output_dir=output,
+        ):
+            statuses.append(status)
+
+        assert "error" not in statuses
+        project_dir = output / "GitAlwaysApp"
+        assert (project_dir / ".git").exists()
+
+        log = subprocess_run(["git", "log", "--oneline"], cwd=project_dir)
+        assert "chore: initial scaffold via forge" in log
+
+
+class TestScaffoldExtras:
+    @pytest.mark.asyncio
+    async def test_no_extras_by_default(self, tmp_path: Path) -> None:
+        from forge.engine.scaffolder import scaffold
+
+        config_dir = tmp_path / "template"
+        files_dir = config_dir / "files"
+        files_dir.mkdir(parents=True)
+        (files_dir / "a.txt").write_text("x")
+        config = {"source": {"type": "local", "files_dir": "./files"}}
+        output = tmp_path / "output"
+        output.mkdir()
+
+        async for _ in scaffold(config, config_dir, {"project_name": "NoExtras"}, output):
+            pass
+
+        project_dir = output / "NoExtras"
+        assert not (project_dir / "Dockerfile").exists()
+        assert not (project_dir / "docker-compose.yml").exists()
+        assert not (project_dir / ".github").exists()
+
+    @pytest.mark.asyncio
+    async def test_dockerfile_and_compose_created_when_requested(self, tmp_path: Path) -> None:
+        from forge.engine.scaffolder import scaffold
+
+        config_dir = tmp_path / "template"
+        files_dir = config_dir / "files"
+        files_dir.mkdir(parents=True)
+        (files_dir / "a.txt").write_text("x")
+        config = {"stack": "nodejs", "source": {"type": "local", "files_dir": "./files"}}
+        output = tmp_path / "output"
+        output.mkdir()
+
+        variables = {
+            "project_name": "WithExtras",
+            "forge_dockerfile": "true",
+            "forge_docker_compose": "true",
+            "forge_pipeline": "none",  # skip build/test/format — no package.json here
+        }
+        statuses = []
+        async for status, _msg in scaffold(config, config_dir, variables, output):
+            statuses.append(status)
+
+        assert "error" not in statuses
+        project_dir = output / "WithExtras"
+        assert "node:" in (project_dir / "Dockerfile").read_text()
+        assert "WithExtras" in (project_dir / "docker-compose.yml").read_text()
+
+    @pytest.mark.asyncio
+    async def test_cicd_workflow_created_for_dotnet_stack(self, tmp_path: Path) -> None:
+        from forge.engine.scaffolder import scaffold
+
+        config_dir = tmp_path / "template"
+        files_dir = config_dir / "files"
+        files_dir.mkdir(parents=True)
+        (files_dir / "a.txt").write_text("x")
+        config = {"stack": "dotnet", "source": {"type": "local", "files_dir": "./files"}}
+        output = tmp_path / "output"
+        output.mkdir()
+
+        variables = {
+            "project_name": "CiApp",
+            "forge_cicd": "true",
+            "forge_cicd_provider": "github-actions",
+            "forge_pipeline": "test",
+        }
+        async for _ in scaffold(config, config_dir, variables, output, step_runner=_RecordingRunner()):
+            pass
+
+        workflow = output / "CiApp" / ".github" / "workflows" / "ci.yml"
+        assert workflow.exists()
+        content = workflow.read_text()
+        assert "dotnet test" in content
+        assert "dotnet build" not in content  # pipeline reduced to just "test"
+
+
+class TestScaffoldStepRunnerInjection:
+    @pytest.mark.asyncio
+    async def test_command_source_step_uses_injected_runner(self, tmp_path: Path) -> None:
+        from forge.engine.scaffolder import scaffold
+
+        config_dir = tmp_path / "template"
+        config_dir.mkdir()
+        config = {
+            "source": {
+                "type": "command",
+                "commands": [{"cmd": "mkdir -p {{project_name}}", "label": "Create"}],
+            },
+        }
+        output = tmp_path / "output"
+        output.mkdir()
+        runner = _RecordingRunner()
+
+        async for _ in scaffold(
+            config, config_dir, {"project_name": "RunnerApp"}, output, step_runner=runner
+        ):
+            pass
+
+        assert any("mkdir -p RunnerApp" in call[0] for call in runner.calls)
+
+    @pytest.mark.asyncio
+    async def test_post_init_and_pipeline_use_injected_runner(self, tmp_path: Path) -> None:
+        from forge.engine.scaffolder import scaffold
+
+        config_dir = tmp_path / "template"
+        files_dir = config_dir / "files"
+        files_dir.mkdir(parents=True)
+        (files_dir / "a.txt").write_text("x")
+        config = {
+            "stack": "nodejs",
+            "source": {"type": "local", "files_dir": "./files"},
+            "post_init": [{"cmd": "echo from-post-init", "label": "Post"}],
+        }
+        output = tmp_path / "output"
+        output.mkdir()
+        runner = _RecordingRunner()
+
+        async for _ in scaffold(
+            config, config_dir,
+            {"project_name": "PipelineApp", "forge_pipeline": "build"},
+            output, step_runner=runner,
+        ):
+            pass
+
+        all_cmds = [c[0] for c in runner.calls]
+        assert "echo from-post-init" in all_cmds
+        assert any("npm run build" in c for c in all_cmds)
+
+
+def subprocess_run(args: list[str], cwd: Path) -> str:
+    import subprocess
+    result = subprocess.run(args, cwd=cwd, capture_output=True, text=True)
+    return result.stdout

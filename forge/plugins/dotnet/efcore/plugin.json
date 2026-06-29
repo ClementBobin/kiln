@@ -1,0 +1,30 @@
+{
+  // ── dotnet/efcore — EF Core DbContext registration ─────────────────────
+  "name": "EF Core — Database Registration",
+  "description": "Registers one or more EF Core DbContexts (SQLite/Postgres) wired up with the slow-query interceptor. Number of databases is configurable.",
+  "tags": ["dotnet", "ef-core", "database"],
+
+  // Combine with "dotnet/efcore/interceptor" (it's a separate, nested plugin —
+  // not auto-included) if you also want slow-query logging.
+  "variables": [
+    { "key": "root_namespace",          "label": "Root namespace",             "default": "Api" },
+    { "key": "database_count",          "label": "Number of databases",        "default": "1" },
+    { "key": "database_provider",       "label": "Database provider",          "default": "sqlite", "choices": ["sqlite", "postgres"] },
+    { "key": "db_context_prefix",       "label": "DbContext class name prefix", "default": "App" },
+    { "key": "connection_string_prefix","label": "Connection string key prefix","default": "DefaultConnection" }
+  ],
+
+  "target_dir": ".",
+
+  "apply": {
+    "type": "local"
+    // files_dir defaults to "." — DatabaseExtensions.cs sits directly
+    // alongside this manifest. The nested "interceptor/" plugin folder is
+    // automatically excluded (it's independently addressable).
+  },
+
+  "post_apply": [
+    { "cmd": "dotnet add package Microsoft.EntityFrameworkCore.Sqlite", "label": "Add EF Core SQLite provider" },
+    { "cmd": "dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL", "label": "Add EF Core Npgsql provider" }
+  ]
+}

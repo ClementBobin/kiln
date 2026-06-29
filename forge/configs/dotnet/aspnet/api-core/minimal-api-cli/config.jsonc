@@ -11,7 +11,7 @@
     // project folder itself, so Forge does not pre-create it.
     "commands": [
       {
-        "cmd": "dotnet new webapi -minimal -o {{project_name}} -n {{namespace}}",
+        "cmd": "dotnet new webapi -minimal -o {{project_name}} -n {{root_namespace}}",
         "label": "Run dotnet CLI generator"
       },
       {
@@ -25,20 +25,29 @@
     ]
   },
 
+  // Compatible plugins this template can use — offered (checked by default)
+  // in the TUI's Plugins section, not force-applied.
+  "plugins": [
+    "dotnet/jwt",
+    "dotnet/efcore",
+    "dotnet/efcore/interceptor",
+    "dotnet/enum-extensions"
+  ],
+
   "variables": [
-    { "key": "project_name", "label": "Project name",     "default": "MyApi" },
-    { "key": "namespace",    "label": "Root namespace",   "default": "MyApi" }
+    { "key": "project_name",   "label": "Project name",   "default": "MyApi" },
+    { "key": "root_namespace", "label": "Root namespace", "default": "MyApi" }
   ],
 
   "git": {
-    "init": true,
-    "initial_branch": "main",
-    "commit_message": "chore: initial scaffold via forge"
+    "initial_branch": "main"
+    // git init + the first commit happen automatically for every project,
+    // with the same standard commit message — no "init"/"commit_message"
+    // flags needed here anymore.
   },
 
   "post_init": [
-    { "cmd": "dotnet restore", "label": "Restore packages" },
-    { "cmd": "git add .",      "label": "Stage all files" },
-    { "cmd": "git commit -m 'chore: initial scaffold via forge'", "label": "Initial commit" }
+    { "cmd": "dotnet restore", "label": "Restore packages" }
+    // git add/commit is handled automatically after this — see scaffold().
   ]
 }

@@ -1,0 +1,11 @@
+{
+  "name": "Kotlin — Compose UI Core",
+  "description": "Shared Jetpack Compose theme (color, type, theme wrapper) used by every screen.",
+  "tags": ["android", "kotlin", "compose", "ui"],
+
+  "variables": [
+    { "key": "package_name", "label": "Package name", "default": "com.example.myapp" }
+  ],
+
+  "apply": { "type": "local" }
+}

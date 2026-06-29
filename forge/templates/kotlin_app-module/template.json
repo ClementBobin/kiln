@@ -1,0 +1,11 @@
+{
+  "name": "Kotlin — Hilt App Module",
+  "description": "A Hilt @Module providing app-wide singletons (e.g. Retrofit, Room).",
+  "tags": ["android", "kotlin", "hilt", "di"],
+
+  "variables": [
+    { "key": "package_name", "label": "Package name", "default": "com.example.myapp" }
+  ],
+
+  "apply": { "type": "local" }
+}

@@ -164,6 +164,9 @@ async def run_command(
     *env*, if given, is merged on top of the current process environment —
     useful for exposing template variables (e.g. FORGE_VAR_PROJECT_NAME) to
     commands and scripts.
+
+    This captures/pipes output — use run_interactive() instead for commands
+    that may need real interactive input (prompts, wizards, etc).
     """
     yield f"▶ {label}"
 
@@ -190,3 +193,35 @@ async def run_command(
     if proc.returncode != 0:
         raise GitError(f"Command failed (exit {proc.returncode}): {cmd}")
     yield f"✓ {label}"
+
+
+async def run_interactive(
+    cmd: str,
+    cwd: Path,
+    env: dict[str, str] | None = None,
+) -> int:
+    """
+    Run *cmd* with the real terminal's stdio inherited (no piping), so
+    interactive prompts (npm create's wizard, dotnet new confirmations, …)
+    work normally. Returns the process's exit code instead of streaming lines.
+
+    Callers running inside a TUI are expected to hand the real terminal back
+    first (e.g. Textual's ``with app.suspend():``) before awaiting this.
+    """
+    full_env = None
+    if env:
+        import os
+        full_env = {**os.environ, **env}
+
+    proc = await asyncio.create_subprocess_shell(cmd, cwd=str(cwd), env=full_env)
+    return await proc.wait()
+
+
+DEFAULT_COMMIT_MESSAGE = "chore: initial scaffold via forge"
+"""The single, consistent first-commit message used for every project forge creates."""
+
+
+async def finalize_git(directory: Path, message: str = DEFAULT_COMMIT_MESSAGE) -> None:
+    """Stage everything and create the initial commit with a standard message."""
+    await git_add_all(directory)
+    await git_commit(directory, message)

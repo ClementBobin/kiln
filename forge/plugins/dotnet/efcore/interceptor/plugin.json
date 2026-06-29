@@ -1,0 +1,27 @@
+{
+  // ── dotnet/efcore/interceptor — EF Core slow-query interceptor ─────────
+  "name": "EF Core — Slow Query Interceptor",
+  "description": "Logs EF Core commands exceeding a configurable threshold, and resolves the calling repository method via a stack-trace walk.",
+  "tags": ["dotnet", "ef-core", "logging", "performance"],
+
+  "variables": [
+    { "key": "root_namespace", "label": "Root namespace", "default": "Api" },
+    { "key": "seuil_ms", "label": "Seuil (ms)", "default": "200" },
+    { "key": "repository_namespace_prefix", "label": "Repository namespace prefix", "default": "Api.Repository" }
+  ],
+
+  // No "target_dir" override here — files land at the project root by
+  // default. Most dotnet templates will want to override this per-reference, e.g.:
+  //   { "id": "dotnet/efcore/interceptor", "target_dir": "src/{{project_name}}.Api" }
+  "target_dir": ".",
+
+  "apply": {
+    "type": "local"
+    // files_dir defaults to "." — EfPerformanceOptions.cs / EfSlowQueryInterceptor.cs
+    // sit directly alongside this manifest.
+  },
+
+  "post_apply": [
+    { "cmd": "dotnet add package Microsoft.Extensions.Options", "label": "Ensure Microsoft.Extensions.Options is referenced" }
+  ]
+}

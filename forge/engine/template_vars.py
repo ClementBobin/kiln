@@ -1,22 +1,63 @@
-"""forge/engine/template_vars.py — Jinja2-like variable interpolation in files."""
+"""forge/engine/template_vars.py — Variable interpolation in files (Jinja2-powered).
+
+Backward compatible with simple ``{{key}}`` placeholders, but since this is now
+real Jinja2 under the hood, plugin/template authors can also use ``{% for %}``
+/ ``{% if %}`` blocks when a snippet needs to scale with a variable — e.g. the
+built-in EF Core plugin uses a loop to generate N database registrations from
+a single ``database_count`` variable.
+
+Unknown variables render back as their original ``{{ name }}`` text (via
+``KeepUndefined``) instead of silently becoming empty, matching the previous
+regex-based behaviour and making missing variables easy to spot in output.
+"""
 
 from __future__ import annotations
 
 import re
 from pathlib import Path
 
-# Matches {{variable_name}} placeholders
+import jinja2
+
+# Matches simple {{variable_name}} placeholders (used for path/name interpolation,
+# and for placeholder discovery — Jinja2 handles the actual file-content rendering).
 _PLACEHOLDER_RE = re.compile(r"\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}")
 
 
+class KeepUndefined(jinja2.Undefined):
+    """An Undefined that renders back to its original {{ name }} text.
+
+    This preserves the old regex-based behaviour of leaving unknown
+    placeholders untouched, instead of Jinja2's default of turning them
+    into an empty string.
+    """
+
+    def __str__(self) -> str:
+        return f"{{{{ {self._undefined_name} }}}}" if self._undefined_name else ""
+
+    __repr__ = __str__
+
+
+_ENV = jinja2.Environment(
+    undefined=KeepUndefined,
+    trim_blocks=True,
+    lstrip_blocks=True,
+    keep_trailing_newline=True,
+    autoescape=False,
+)
+
+
 def interpolate_string(text: str, variables: dict[str, str]) -> str:
-    """Replace all {{key}} placeholders in *text* with values from *variables*."""
+    """Render *text* as a Jinja2 template against *variables*.
 
-    def replacer(match: re.Match) -> str:
-        key = match.group(1)
-        return variables.get(key, match.group(0))  # keep original if key missing
-
-    return _PLACEHOLDER_RE.sub(replacer, text)
+    Supports plain ``{{key}}`` substitution as well as ``{% for %}`` / ``{% if %}``
+    blocks. Falls back to returning *text* unchanged if it isn't valid Jinja2
+    (e.g. stray ``{%`` in a file that isn't meant to be templated).
+    """
+    try:
+        template = _ENV.from_string(text)
+        return template.render(**variables)
+    except jinja2.TemplateError:
+        return text
 
 
 def interpolate_path(path_str: str, variables: dict[str, str]) -> str:
@@ -26,7 +67,7 @@ def interpolate_path(path_str: str, variables: dict[str, str]) -> str:
 
 def interpolate_file(file_path: Path, variables: dict[str, str]) -> None:
     """
-    Read *file_path*, replace all {{key}} placeholders in-place, write back.
+    Read *file_path*, render it as a Jinja2 template against *variables*, write back.
     Skips binary files silently.
     """
     try:
@@ -62,8 +103,10 @@ def interpolate_directory(directory: Path, variables: dict[str, str]) -> None:
 
 def collect_placeholders(template_dir: Path) -> set[str]:
     """
-    Scan all files in *template_dir* and collect all unique placeholder keys.
-    Useful for pre-validating variables before scaffolding.
+    Scan all files in *template_dir* and collect all unique simple ``{{key}}``
+    placeholder keys (path components and file content). Useful for
+    pre-validating variables before scaffolding. Does not attempt to parse
+    {% %} block variables — those are considered advanced/plugin-internal.
     """
     keys: set[str] = set()
     for file_path in template_dir.rglob("*"):

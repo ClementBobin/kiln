@@ -1,0 +1,16 @@
+{
+  // ── dotnet/enum-extensions — Enum.GetDescription() helper ──────────────
+  "name": "Enum Extensions",
+  "description": "Adds a GetEnumDescription() extension method that reads [Description] attributes off enum members.",
+  "tags": ["dotnet", "tools", "enum"],
+
+  "variables": [
+    { "key": "root_namespace", "label": "Root namespace", "default": "Api" }
+  ],
+
+  "target_dir": ".",
+
+  "apply": {
+    "type": "local"
+  }
+}

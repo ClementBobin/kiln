@@ -1,0 +1,17 @@
+{
+  // ── react/structure — conventional React folder layout ─────────────────
+  "name": "React — Project Structure (hooks, ui, lib, types, contexts)",
+  "description": "Drops the conventional React app skeleton: hooks/, components/ui/, lib/, types/, contexts/.",
+  "tags": ["react", "structure", "frontend"],
+
+  // Lands directly under the project's "src/" folder by default — override
+  // per-reference if your template uses a different layout, e.g.:
+  //   { "id": "react/structure", "target_dir": "app" }
+  "target_dir": "src",
+
+  "apply": {
+    "type": "local"
+    // files_dir defaults to "." — hooks/, components/, lib/, types/, contexts/
+    // sit directly alongside this manifest.
+  }
+}

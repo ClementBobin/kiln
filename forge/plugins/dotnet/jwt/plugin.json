@@ -1,0 +1,25 @@
+{
+  // ── dotnet/jwt — JWT cookie-based authentication ───────────────────────
+  "name": "JWT Authentication (cookie-based)",
+  "description": "ASP.NET Core JWT bearer auth, reading the token from an httpOnly cookie, plus an AdminOnly role policy and a token generator.",
+  "tags": ["dotnet", "auth", "jwt"],
+
+  "variables": [
+    { "key": "root_namespace",   "label": "Root namespace", "default": "Api" },
+    { "key": "auth_cookie_name", "label": "Auth cookie name", "default": "cyna_token" },
+    { "key": "admin_roles",      "label": "Comma-separated admin role names", "default": "Administrateur,Super Administrateur" }
+  ],
+
+  "target_dir": ".",
+
+  "apply": {
+    "type": "local"
+    // files_dir defaults to "." — AuthExtensions.cs / JwtOptions.cs /
+    // ITokenGenerator.cs / JwtTokenGenerator.cs sit alongside this manifest.
+  },
+
+  "post_apply": [
+    { "cmd": "dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer", "label": "Add JWT bearer package" },
+    { "cmd": "dotnet add package System.IdentityModel.Tokens.Jwt", "label": "Add JWT tokens package" }
+  ]
+}

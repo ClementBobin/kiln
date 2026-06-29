@@ -2,8 +2,8 @@ namespace {{root_namespace}}.Extensions;
 
 using System.Text;
 
-using Infrastructure.Interfaces;
-using Infrastructure.Security;
+using {{root_namespace}}.Interfaces;
+using {{root_namespace}}.Security;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -43,7 +43,7 @@ public static class AuthExtensions
                 {
                     OnMessageReceived = context =>
                     {
-                        var token = context.Request.Cookies["cyna_token"];
+                        var token = context.Request.Cookies["{{ auth_cookie_name }}"];
                         if (!string.IsNullOrEmpty(token))
                             context.Token = token;
                         return Task.CompletedTask;
@@ -53,7 +53,7 @@ public static class AuthExtensions
 
         services.AddAuthorizationBuilder()
             .AddPolicy("AdminOnly", policy =>
-                policy.RequireRole("Administrateur", "Super Administrateur"));
+                policy.RequireRole({% for role in admin_roles.split(',') %}"{{ role.strip() }}"{% if not loop.last %}, {% endif %}{% endfor %}));
 
         services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 

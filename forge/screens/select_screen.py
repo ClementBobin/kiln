@@ -38,10 +38,18 @@ class SelectScreen(Screen):
         Binding("q", "quit_app", "Quit"),
     ]
 
-    def __init__(self, loader: ConfigLoader, output_dir: Path):
+    def __init__(
+        self,
+        loader: ConfigLoader,
+        output_dir: Path,
+        plugin_loader=None,
+        template_loader=None,
+    ):
         super().__init__()
         self.loader = loader
         self.output_dir = output_dir
+        self.plugin_loader = plugin_loader
+        self.template_loader = template_loader
         self._nav_stack: list[TreeNode] = []  # stack of parent nodes
         self._current_children: list[TreeNode] = []
 
@@ -110,7 +118,12 @@ class SelectScreen(Screen):
             # Navigate to preview
             from forge.screens.preview_screen import PreviewScreen
             self.app.push_screen(
-                PreviewScreen(node=node, output_dir=self.output_dir)
+                PreviewScreen(
+                    node=node,
+                    output_dir=self.output_dir,
+                    plugin_loader=self.plugin_loader,
+                    template_loader=self.template_loader,
+                )
             )
         else:
             # Drill down

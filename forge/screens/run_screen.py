@@ -1,8 +1,17 @@
-"""forge/screens/run_screen.py — Live execution log screen."""
+"""forge/screens/run_screen.py — Live execution log screen.
+
+Most steps stream into the log (RichLog) as usual. But any step that shells
+out to an external command (the project's own CLI generator, a setup
+script, post_init, the build/test/format pipeline, ...) hands the *real*
+terminal over to that process instead — via Textual's ``app.suspend()`` —
+so interactive prompts/wizards work and the TUI never blocks input. Once
+the command finishes, control returns to the TUI and we keep logging.
+"""
 
 from __future__ import annotations
 
 import asyncio
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -28,12 +37,16 @@ class RunScreen(Screen):
         config_path: Path,
         variables: dict[str, str],
         output_dir: Path,
+        plugin_loader=None,
+        template_loader=None,
     ):
         super().__init__()
         self.config = config
         self.config_path = config_path
         self.variables = variables
         self.output_dir = output_dir
+        self.plugin_loader = plugin_loader
+        self.template_loader = template_loader
         self._done = False
         self._error = False
 
@@ -57,6 +70,32 @@ class RunScreen(Screen):
         asyncio.get_event_loop().create_task(self._run_scaffold())
 
     # ------------------------------------------------------------------ #
+    # Interactive step runner — hands the real terminal to the child
+    # process so prompts/wizards work, instead of blocking behind the TUI.
+    # ------------------------------------------------------------------ #
+
+    async def _interactive_step_runner(self, cmd: str, cwd: Path, label: str, env: dict[str, str]) -> int:
+        log: RichLog = self.query_one("#log", RichLog)
+        log.write(f"[yellow]⠋[/yellow]  {label}  [dim](handing over terminal — interact normally)[/dim]")
+
+        import os
+        full_env = {**os.environ, **env} if env else None
+
+        # Suspend the TUI (returns the real terminal to the user) for the
+        # duration of the command, then resume — this is what keeps the
+        # screen from blocking input during installs/wizards.
+        with self.app.suspend():
+            print(f"\n$ {cmd}\n")
+            result = subprocess.run(cmd, shell=True, cwd=str(cwd), env=full_env)
+            print()  # spacing before the TUI redraws
+
+        if result.returncode == 0:
+            log.write(f"[green]✓[/green]  {label}")
+        else:
+            log.write(f"[red]✗[/red]  {label} (exit {result.returncode})")
+        return result.returncode
+
+    # ------------------------------------------------------------------ #
     # Scaffold runner
     # ------------------------------------------------------------------ #
 
@@ -69,6 +108,9 @@ class RunScreen(Screen):
                 config_path=self.config_path,
                 variables=self.variables,
                 output_dir=self.output_dir,
+                plugin_loader=self.plugin_loader,
+                template_loader=self.template_loader,
+                step_runner=self._interactive_step_runner,
             ):
                 if status == "ok":
                     log.write(f"[green]✓[/green]  {message}")

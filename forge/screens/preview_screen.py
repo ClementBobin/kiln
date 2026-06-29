@@ -16,11 +16,13 @@ from textual.widgets import (
     Input,
     Label,
     Select,
+    SelectionList,
     Static,
+    Switch,
 )
 
 from forge.engine.config_loader import TreeNode
-from forge.engine.scaffolder import preview_tree
+from forge.engine.scaffolder import DEFAULT_PIPELINE, _ref_id, preview_tree
 
 
 class SectionTitle(Static):
@@ -41,10 +43,18 @@ class PreviewScreen(Screen):
         Binding("q", "quit_app", "Quit"),
     ]
 
-    def __init__(self, node: TreeNode, output_dir: Path):
+    def __init__(
+        self,
+        node: TreeNode,
+        output_dir: Path,
+        plugin_loader=None,
+        template_loader=None,
+    ):
         super().__init__()
         self.node = node
         self.output_dir = output_dir
+        self.plugin_loader = plugin_loader
+        self.template_loader = template_loader
         self._config: dict[str, Any] = {}
         self._var_widgets: dict[str, Input | Select] = {}
         self._github_ok: bool | None = None  # None = not checked yet
@@ -64,6 +74,28 @@ class PreviewScreen(Screen):
             Static(id="file-tree"),
             SectionTitle("⚙️  Variables"),
             Vertical(id="vars-container"),
+            SectionTitle("🧩  Plugins"),
+            Static(id="plugins-hint"),
+            SelectionList(id="plugins-list"),
+            SectionTitle("🐳  Docker / CI-CD / Pipeline"),
+            Horizontal(
+                Label("Dockerfile"), Switch(id="sw-dockerfile", value=False),
+                Label("docker-compose"), Switch(id="sw-compose", value=False),
+                Label("CI/CD"), Switch(id="sw-cicd", value=False),
+                id="extras-switches",
+            ),
+            Label("CI/CD provider:"),
+            Select(
+                options=[
+                    ("GitHub Actions", "github-actions"),
+                    ("GitLab CI", "gitlab-ci"),
+                    ("Azure DevOps", "azure-devops"),
+                ],
+                value="github-actions",
+                id="select-cicd-provider",
+            ),
+            Label("Pipeline steps:"),
+            SelectionList(id="pipeline-list"),
             SectionTitle("📋  Actions summary"),
             Static(id="summary"),
             Horizontal(
@@ -105,7 +137,7 @@ class PreviewScreen(Screen):
         self.query_one("#tags-line", Static).update(tag_str)
 
         # File tree
-        tree_lines = preview_tree(cfg, self.node.config_path)
+        tree_lines = preview_tree(cfg, self.node.path)
         tree_text = "\n".join(tree_lines) if tree_lines else "(empty)"
         self.query_one("#file-tree", Static).update(tree_text)
 
@@ -133,6 +165,33 @@ class PreviewScreen(Screen):
                 )
             vars_container.mount(widget)
             self._var_widgets[key] = widget
+
+        # Plugins (offered, not forced — config['plugins'] lists ids it CAN use)
+        plugin_refs = cfg.get("plugins", [])
+        plugins_list: SelectionList = self.query_one("#plugins-list", SelectionList)
+        hint: Static = self.query_one("#plugins-hint", Static)
+        if not plugin_refs:
+            hint.update("[dim]No plugins declared by this template.[/dim]")
+        elif self.plugin_loader is None:
+            hint.update("[dim]No plugin loader configured.[/dim]")
+        else:
+            hint.update("[dim]Select which of this template's compatible plugins to apply:[/dim]")
+            for raw_ref in plugin_refs:
+                ref = _ref_id(raw_ref)
+                pid = ref.get("id", "")
+                try:
+                    plugin = self.plugin_loader.get(pid)
+                    label = plugin.name
+                except KeyError:
+                    label = f"{pid} [red](not found)[/red]"
+                plugins_list.add_option((label, pid, True))  # pre-checked by default
+
+        # Pipeline steps — always offered; config['pipeline'] only changes the
+        # default *selection*, not whether the feature exists.
+        default_pipeline = cfg.get("pipeline", DEFAULT_PIPELINE)
+        pipeline_list: SelectionList = self.query_one("#pipeline-list", SelectionList)
+        for step in DEFAULT_PIPELINE:
+            pipeline_list.add_option((step.capitalize(), step, step in default_pipeline))
 
         # Summary
         self.query_one("#summary", Static).update(self._build_summary())
@@ -228,7 +287,23 @@ class PreviewScreen(Screen):
                 result[key] = str(val) if val is not None else ""
             else:
                 result[key] = widget.value
+
+        # "Always present" variables — never declared in config.json, always offered.
+        result["forge_dockerfile"] = "true" if self.query_one("#sw-dockerfile", Switch).value else "false"
+        result["forge_docker_compose"] = "true" if self.query_one("#sw-compose", Switch).value else "false"
+        result["forge_cicd"] = "true" if self.query_one("#sw-cicd", Switch).value else "false"
+        result["forge_cicd_provider"] = str(self.query_one("#select-cicd-provider", Select).value or "github-actions")
+        result["forge_pipeline"] = ",".join(self.query_one("#pipeline-list", SelectionList).selected)
         return result
+
+    def _filtered_config(self) -> dict[str, Any]:
+        """Copy of self._config with config['plugins'] narrowed to the user's selection."""
+        config = dict(self._config)
+        plugin_refs = config.get("plugins", [])
+        if plugin_refs:
+            selected_ids = set(self.query_one("#plugins-list", SelectionList).selected)
+            config["plugins"] = [ref for ref in plugin_refs if _ref_id(ref).get("id") in selected_ids]
+        return config
 
     # ------------------------------------------------------------------ #
     # Button / action handlers
@@ -247,10 +322,12 @@ class PreviewScreen(Screen):
         from forge.screens.run_screen import RunScreen
         self.app.push_screen(
             RunScreen(
-                config=self._config,
-                config_path=self.node.config_path,
+                config=self._filtered_config(),
+                config_path=self.node.path,
                 variables=variables,
                 output_dir=self.output_dir,
+                plugin_loader=self.plugin_loader,
+                template_loader=self.template_loader,
             )
         )
 

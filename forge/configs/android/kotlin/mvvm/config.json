@@ -5,6 +5,7 @@
   "tags": ["android", "kotlin", "mvvm", "compose", "hilt", "retrofit", "room"],
 
   "structure": {
+    "type": "android-app",
     "data" : {
       "folders": ["dto", "local", "remote", "repository"]
     },
@@ -15,8 +16,12 @@
       "folders": ["model", "repository", "usecase"]
     },
     "ui" : {
-      "folders": ["screens", "core"],
-      "templates": ["kotlin_ui_core"]
+      "folders": [
+        "screens", 
+        "core": {
+          "templates": ["kotlin_ui_core"]
+        }
+      ]
     }
   },
 
