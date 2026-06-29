@@ -17,7 +17,7 @@
     },
     "ui" : {
       "folders": [
-        "screens", 
+        "screens",
         "core": {
           "templates": ["kotlin_ui_core"]
         }

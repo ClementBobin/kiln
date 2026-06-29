@@ -1,28 +1,40 @@
 {
-  // ── nodejs/prisma — Prisma ORM setup ────────────────────────────────────
   "name": "Prisma ORM",
-  "description": "Installs Prisma + the Postgres driver adapter and runs `prisma init`.",
+  "description": "Sets up Prisma ORM: picks your database interactively, writes prisma.config.ts, patches schema.prisma, creates lib/prisma.ts with the right driver adapter, and emits .env.example.",
   "tags": ["nodejs", "prisma", "orm", "database"],
 
   "variables": [
-    { "key": "prisma_output_dir", "label": "Generated client output dir", "default": "../generated/prisma" }
+    {
+      "key": "prisma_output_dir",
+      "label": "Generated client output dir",
+      "default": "../generated/prisma"
+    }
+  ],
+
+  "dependencies": [
+    "prisma --save-dev",
+    "@prisma/client",
+    "dotenv"
   ],
 
   "apply": {
-    "type": "command",
-    "commands": [
-      {
-        "cmd": "npm install prisma @types/pg --save-dev",
-        "label": "Install Prisma (dev dependency)"
-      },
-      {
-        "cmd": "npm install @prisma/client @prisma/adapter-pg pg dotenv",
-        "label": "Install Prisma client + Postgres adapter"
-      }
-    ]
+    "type": "script",
+    "file": "setup_prisma.py",
+    "runtime": "python3"
   },
 
   "post_apply": [
-    { "cmd": "npx prisma init --output {{prisma_output_dir}}", "label": "Initialise Prisma schema" }
+    {
+      "cmd": "npx prisma init --output {{prisma_output_dir}}",
+      "label": "Initialise Prisma schema"
+    },
+    {
+      "cmd": "python3 setup_prisma.py",
+      "label": "Configure adapter, schema and lib/prisma.ts"
+    },
+    {
+      "cmd": "[ -f .prisma-extra-deps ] && npm install $(cat .prisma-extra-deps | tr '\\n' ' ') || true",
+      "label": "Install adapter dependencies"
+    }
   ]
 }
