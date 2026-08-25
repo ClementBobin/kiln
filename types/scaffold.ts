@@ -14,6 +14,7 @@ export interface ScaffoldEvent {
 }
 
 export interface ScaffoldOptions {
+  runtime: string;
   config: KilnConfig;
   variables: Record<string, string>;
   outputDir: string;

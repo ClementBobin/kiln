@@ -1,6 +1,6 @@
 import path from 'node:path';
 import fs from 'node:fs';
-import { BaseRuntimeEngine } from './base-runtime.js';
+import { BaseRuntimeEngine } from './base.runtime.js';
 import type { ScaffoldEvent } from '../../../types/index.js';
 
 export class DotNetRuntimeEngine extends BaseRuntimeEngine {

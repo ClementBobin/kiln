@@ -11,7 +11,7 @@ import { select, input } from '@inquirer/prompts';
 import chalk from 'chalk';
 
 import { buildConfigTree, loadConfigFile } from '../engine/config-loader.js';
-import { scaffold } from '../engine/runtimes/base.runtime.js';
+import { scaffold } from '../engine/runtimes/index.js';
 import type { Diagnostic } from '../../types/index.js';
 import type { TreeNode, ConfigVariable, PickOptions, ScaffoldEventStatus } from '../../types/index.js';
 import console from 'node:console';

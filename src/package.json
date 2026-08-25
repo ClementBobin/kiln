@@ -2,7 +2,13 @@
   "name": "kiln",
   "version": "0.1.0",
   "description": "Interactive CLI project scaffolding tool — scaffold any project in seconds",
-  "keywords": ["cli", "scaffold", "project-init", "generator", "template"],
+  "keywords": [
+    "cli",
+    "scaffold",
+    "project-init",
+    "generator",
+    "template"
+  ],
   "homepage": "https://github.com/ClementBobin/kiln",
   "repository": {
     "type": "git",
@@ -25,17 +31,17 @@
   ],
   "dependencies": {
     "@inquirer/prompts": "^7.0.0",
+    "ajv": "^8.12.0",
+    "ajv-formats": "^3.0.1",
     "chalk": "^5.3.0",
     "commander": "^12.0.0",
     "execa": "^9.0.0",
-    "ora": "^8.0.0",
     "fast-glob": "^3.3.0",
     "jsonc-parser": "^3.2.0",
-    "ajv": "^8.12.0",
-    "ajv-formats": "^3.0.1"
+    "ora": "^8.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^20.19.43",
     "vitest": "^1.6.0"
   },
   "scripts": {
