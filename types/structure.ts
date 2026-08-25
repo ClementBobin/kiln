@@ -15,9 +15,11 @@ export interface Structure {
     folders?: (string | Record<string, FolderConfig>)[];
     references?: string[];
     templates?: Template;
+    args?: string[];
 };
 
-export interface Structures {
-    [key: string]: Structure;
-    templates?: Template;
-}
+export type StructureEntry = string | Record<string, FolderConfig>;
+
+export type Structures =
+    | (Record<string, Structure> & { templates?: Template })
+    | StructureEntry[];

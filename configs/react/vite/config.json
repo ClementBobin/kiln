@@ -1,7 +1,6 @@
 {
   "name": "React — Vite + TypeScript",
   "description": "React SPA with Vite, TypeScript, Tailwind CSS, React Query, and React Router v6.",
-  "tags": ["react", "vite", "typescript", "tailwind", "react-query", "spa"],
 
   "source": {
     "type": "command",
@@ -30,13 +29,5 @@
     "editorconfig": true,
     "linter": { "enabled": true, "type": "eslint", "config_file": "eslint.config.mjs" },
     "formatter": { "enabled": true, "type": "prettier" }
-  },
-
-  "cicd": {
-    "workflows": ["type-check"]
-  },
-
-  "post_init": [
-    { "cmd": "npm install", "label": "Install dependencies" }
-  ]
+  }
 }

@@ -1,7 +1,6 @@
 {
   "name": "Android — Kotlin MVVM",
   "description": "Android application with MVVM architecture, Jetpack Compose UI, Hilt dependency injection, Retrofit for networking, and Room for local persistence.",
-  "tags": ["android", "kotlin", "mvvm", "compose", "hilt", "retrofit", "room"],
 
   "structure": {
     "type": "android-app",
@@ -46,17 +45,5 @@
       "config_file": "commitlint.config.js",
       "hooks": "husky"
     }
-  },
-
-  "source": {
-    "type": "command",
-    "commands": [
-      {
-        "cmd": "echo 'Android MVVM project scaffold — open Android Studio and use File > New > New Project with the Empty Compose Activity template, then configure package {{package_name}}'",
-        "label": "Android MVVM setup instructions"
-      }
-    ]
-  },
-
-  "post_init": []
+  }
 }

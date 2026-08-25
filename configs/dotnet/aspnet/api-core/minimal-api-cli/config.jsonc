@@ -2,26 +2,12 @@
   // ── ASP.NET Core Minimal API (official `dotnet new` CLI) ──────────────
   "name": "ASP.NET Core — Minimal API (dotnet CLI)",
   "description": "Scaffolds with `dotnet new webapi` directly, then adds a solution file — no static template files.",
-  "tags": ["dotnet", "api", "minimal-api", "cli", "no-template"],
 
-  "source": {
-    "type": "command",
-    // "creates_dir" defaults to true: dotnet's "-o" flag below creates the
-    // project folder itself, so Forge does not pre-create it.
-    "commands": [
-      {
-        "cmd": "dotnet new webapi -minimal -o {{project_name}} -n {{root_namespace}}",
-        "label": "Run dotnet CLI generator"
-      },
-      {
-        "cmd": "dotnet new sln -n {{project_name}} -o {{project_name}}",
-        "label": "Create solution file"
-      },
-      {
-        "cmd": "dotnet sln {{project_name}}/{{project_name}}.sln add {{project_name}}/{{project_name}}.csproj",
-        "label": "Add project to solution"
-      }
-    ]
+  "structure": {
+    "Api" :{
+      "type": "web-api",
+      "args": ["minimal"]
+    }
   },
 
   // Compatible plugins this template can use — offered (checked by default)
@@ -36,17 +22,5 @@
   "variables": [
     { "key": "project_name",   "label": "Project name",   "default": "MyApi" },
     { "key": "root_namespace", "label": "Root namespace", "default": "MyApi" }
-  ],
-
-  "git": {
-    "initial_branch": "main"
-    // git init + the first commit happen automatically for every project,
-    // with the same standard commit message — no "init"/"commit_message"
-    // flags needed here anymore.
-  },
-
-  "post_init": [
-    { "cmd": "dotnet restore", "label": "Restore packages" }
-    // git add/commit is handled automatically after this — see scaffold().
   ]
 }

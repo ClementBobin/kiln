@@ -1,7 +1,6 @@
 {
   "name": "Next.js 14 — App Router",
   "description": "Next.js application using the App Router, Tailwind CSS, TypeScript",
-  "tags": ["react", "nextjs", "typescript", "app-router"],
 
   "source": {
     "type": "command",
@@ -44,17 +43,5 @@
       "config_file": "commitlint.config.js",
       "hooks": "husky"
     }
-  },
-
-  "docker": {
-    "target_stage": "development"
-  },
-
-  "cicd": {
-    "workflows": ["type-check"]
-  },
-
-  "post_init": [
-    { "cmd": "npm install", "label": "Install dependencies" }
-  ]
+  }
 }

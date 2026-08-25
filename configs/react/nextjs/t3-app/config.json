@@ -1,7 +1,6 @@
 {
   "name": "nextjs-t3-app",
   "description": "Next.js application using the App Router, Tailwind CSS, TypeScript and tRPC",
-  "tags": ["react", "nextjs", "typescript", "app-router", "api"],
 
   "source": {
     "type": "command",
@@ -30,17 +29,5 @@
       "config_file": "commitlint.config.js",
       "hooks": "husky"
     }
-  },
-
-  "docker": {
-    "target_stage": "development"
-  },
-
-  "cicd": {
-    "workflows": ["type-check"]
-  },
-
-  "post_init": [
-    { "cmd": "npm install", "label": "Install dependencies" }
-  ]
+  }
 }

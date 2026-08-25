@@ -1,49 +1,44 @@
 {
   "name": "Config 4 Couches",
   "description": "REST API with Clean Architecture layers (Domain, Application, Infrastructure, Api)",
-  "tags": ["dotnet", "aspnet", "api", "clean-archi"],
 
-  "source": {
-    "type": "structure",
-    "structure": {
-      "Api": {
-        "type": "web-api",
-        "folders": ["Configuration", "Controllers", "Extensions", "Interceptors", "Middleware"],
-        "references": ["Application", "Application.Tests", "Domain", "Infrastructure", "Infrastructure.Tests"]
-      },
-      "Api.Tests": {
-        "type": "xunit",
-        "references": ["Api", "Domain", "Application"]
-      },
-      "Application": {
-        "type": "class-library",
-        "folders": ["Interfaces", "Services"],
-        "references": ["Domain", "Tools", "Infrastructure"]
-      },
-      "Application.Tests": {
-        "type": "xunit",
-        "references": ["Domain", "Application", "Infrastructure"]
-      },
-      "Domain": {
-        "type": "class-library",
-        "folders": ["Dto", "Entities"]
-      },
-      "Infrastructure": {
-        "type": "class-library",
-        "folders": ["Data", "Interfaces", "Repositories"],
-        "references": ["Domain", "Tools"]
-      },
-      "Infrastructure.Tests": {
-        "type": "xunit",
-        "references": ["Domain", "Infrastructure"]
-      }
+  "structure": {
+    "Api": {
+      "type": "web-api",
+      "folders": ["Configuration", "Controllers", "Extensions", "Interceptors", "Middleware"],
+      "references": ["Application", "Application.Tests", "Domain", "Infrastructure", "Infrastructure.Tests"]
+    },
+    "Api.Tests": {
+      "type": "xunit",
+      "references": ["Api", "Domain", "Application"]
+    },
+    "Application": {
+      "type": "class-library",
+      "folders": ["Interfaces", "Services"],
+      "references": ["Domain", "Tools", "Infrastructure"]
+    },
+    "Application.Tests": {
+      "type": "xunit",
+      "references": ["Domain", "Application", "Infrastructure"]
+    },
+    "Domain": {
+      "type": "class-library",
+      "folders": ["Dto", "Entities"]
+    },
+    "Infrastructure": {
+      "type": "class-library",
+      "folders": ["Data", "Interfaces", "Repositories"],
+      "references": ["Domain", "Tools"]
+    },
+    "Infrastructure.Tests": {
+      "type": "xunit",
+      "references": ["Domain", "Infrastructure"]
     }
   },
 
   "variables": [
     { "key": "project_name",   "label": "Project name",   "default": "MyApi" },
-    { "key": "dotnet_version", "label": ".NET version",   "choices": ["8", "9", "10"], "default": "10" },
-    { "key": "enable_test",    "label": "Enable testing", "choices": ["true", "false"], "default": "false" }
+    { "key": "dotnet_version", "label": ".NET version",   "choices": ["8", "9", "10"], "default": "10" }
   ],
 
   "code_conventions": {
@@ -63,9 +58,5 @@
       "config_file": "commitlint.config.js",
       "hooks": "husky"
     }
-  },
-
-  "post_init": [
-    { "cmd": "dotnet restore", "label": "Restore NuGet packages" }
-  ]
+  }
 }

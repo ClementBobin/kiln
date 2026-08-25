@@ -4,17 +4,17 @@
  * All shared types for kiln config files (config.json / config.jsonc).
  */
 
+import type { Structures } from "./index.js";
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Config schema types
 // ──────────────────────────────────────────────────────────────────────────────
 
-export type SourceType = 'command' | 'local' | 'github' | 'script' | 'structure';
+export type SourceType = 'command' | 'local' | 'github' | 'script';
 
 export type LinterType = 'eslint' | 'biome' | 'oxc' | 'pylint' | 'ruff' | 'ktlint' | 'detekt' | 'swiftlint';
 
 export type FormatterType = 'prettier' | 'biome' | 'black' | 'ruff' | 'ktlint' | 'swiftformat';
-
-export type PipelineStep = 'build' | 'test' | 'format';
 
 export interface CommandStep {
   cmd: string;
@@ -30,8 +30,6 @@ export interface ConfigSource {
   ref?: string;
   /** For type === 'local' */
   path?: string;
-  /** For type === 'structure' */
-  structure?: unknown;
 }
 
 export interface ConfigVariable {
@@ -67,25 +65,13 @@ export interface CodeConventions {
   commit_conventions?: CommitConventionsConfig;
 }
 
-export interface DockerConfig {
-  target_stage?: string;
-}
-
-export interface CiCdConfig {
-  workflows?: string[];
-}
-
 export interface KilnConfig {
   name: string;
   description?: string;
-  tags?: string[];
-  source: ConfigSource;
+  source?: ConfigSource;
+  structure?: Structures;
   variables?: ConfigVariable[];
   code_conventions?: CodeConventions;
-  docker?: DockerConfig;
-  cicd?: CiCdConfig;
-  pipeline?: PipelineStep[];
   post_init?: CommandStep[];
-  templates?: string[];
   plugins?: string[];
 }

@@ -1,7 +1,6 @@
 {
   "name": "ASP.NET Core API — Clean Architecture + EF Core",
   "description": "REST API with Clean Architecture layers (Business, Business.Contracts, Entity, EntitiesContext, Repository, Repository.Contracts, WebApplications)",
-  "tags": ["dotnet", "aspnet", "api", "clean-archi"],
 
   "structure": {
     "WebApplications": {
@@ -10,9 +9,8 @@
       "references": ["Business", "Business.Contracts", "Repository", "Repository.Contracts", "Entity"]
     },
     "WebApplications.Tests": {
-      "type": "unit-test",
-      "references": ["WebApplications", "Business.Contracts"],
-      "lib": "xunit"
+      "type": "xunit",
+      "references": ["WebApplications", "Business.Contracts"]
     },
     "Business": {
       "type": "class-library",
@@ -25,9 +23,8 @@
       "references": ["Entity"]
     },
     "Business.Tests": {
-      "type": "unit-test",
-      "references": ["Business", "Business.Contracts"],
-      "lib": "xunit"
+      "type": "xunit",
+      "references": ["Business", "Business.Contracts"]
     },
     "Entity": {
       "type": "class-library",
@@ -46,16 +43,14 @@
       "references": ["Entity"]
     },
     "Repository.Tests": {
-      "type": "unit-test",
-      "lib": "xunit",
+      "type": "xunit",
       "references": ["Repository", "Entity", "EntitiesContext"]
     }
   },
 
   "variables": [
     { "key": "project_name", "label": "Project name", "default": "MyApi" },
-    { "key": "dotnet_version", "label": ".NET version", "choices": ["8", "9", "10"], "default": "10" },
-    { "key": "enable_test", "label": "Enable testing", "choices": ["true", "false"], "default": "false" }
+    { "key": "dotnet_version", "label": ".NET version", "choices": ["8", "9", "10"], "default": "10" }
   ],
 
   "code_conventions": {
@@ -75,10 +70,5 @@
       "config_file": "commitlint.config.js",
       "hooks": "husky"
     }
-  },
-
-
-  "post_init": [
-    { "cmd": "dotnet restore", "label": "Restore NuGet packages" }
-  ]
+  }
 }

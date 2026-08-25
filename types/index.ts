@@ -8,3 +8,4 @@ export * from './scaffold.js';
 export * from './tree.js';
 export * from './cli.js';
 export * from './runtime.js';
+export * from './structure.js';
