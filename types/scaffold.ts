@@ -15,8 +15,6 @@ export interface ScaffoldEvent {
 
 export interface ScaffoldOptions {
   config: KilnConfig;
-  /** Absolute path to the directory where the config file lives */
-  configDir: string;
   variables: Record<string, string>;
   outputDir: string;
 }

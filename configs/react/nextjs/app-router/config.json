@@ -1,7 +1,6 @@
 {
   "name": "Next.js 14 — App Router",
   "description": "Next.js application using the App Router, Tailwind CSS, TypeScript",
-  "version": "1.0.0",
   "tags": ["react", "nextjs", "typescript", "app-router"],
 
   "source": {

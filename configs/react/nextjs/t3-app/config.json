@@ -1,7 +1,6 @@
 {
   "name": "nextjs-t3-app",
   "description": "Next.js application using the App Router, Tailwind CSS, TypeScript and tRPC",
-  "version": "1.0.0",
   "tags": ["react", "nextjs", "typescript", "app-router", "api"],
 
   "source": {

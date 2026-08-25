@@ -2,7 +2,6 @@
   // ── ASP.NET Core Minimal API (official `dotnet new` CLI) ──────────────
   "name": "ASP.NET Core — Minimal API (dotnet CLI)",
   "description": "Scaffolds with `dotnet new webapi` directly, then adds a solution file — no static template files.",
-  "version": "1.0.0",
   "tags": ["dotnet", "api", "minimal-api", "cli", "no-template"],
 
   "source": {

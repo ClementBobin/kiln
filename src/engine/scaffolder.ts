@@ -74,25 +74,6 @@ async function* handleCommandSource(
   }
 }
 
-async function* handleLocalSource(
-  source: ConfigSource,
-  vars: Record<string, string>,
-  outputDir: string,
-  configDir: string
-): AsyncGenerator<ScaffoldEvent> {
-  const srcPath = source.path
-    ? path.resolve(configDir, interpolate(source.path, vars))
-    : configDir;
-
-  yield { status: 'running', message: `Copying from ${srcPath}` };
-  try {
-    copyDir(srcPath, outputDir, vars);
-    yield { status: 'ok', message: 'Files copied' };
-  } catch (err: unknown) {
-    yield { status: 'error', message: `Copy failed: ${(err as Error).message}` };
-  }
-}
-
 async function* handleGithubSource(
   source: ConfigSource,
   vars: Record<string, string>,
@@ -139,7 +120,7 @@ function copyDir(src: string, dest: string, vars: Record<string, string>): void 
  * Yields ScaffoldEvent objects as work proceeds.
  */
 export async function* scaffold(options: ScaffoldOptions): AsyncGenerator<ScaffoldEvent> {
-  const { config, configDir, variables, outputDir } = options;
+  const { config, variables, outputDir } = options;
   const vars = variables ?? {};
   const source = config.source ?? ({} as ConfigSource);
 
@@ -148,9 +129,8 @@ export async function* scaffold(options: ScaffoldOptions): AsyncGenerator<Scaffo
     case 'command':
       yield* handleCommandSource(source, vars, outputDir);
       break;
-    case 'local':
-      yield* handleLocalSource(source, vars, outputDir, configDir);
-      break;
+    case 'structure':
+      yield* handleStructureSource(source, vars, outputDir);
     case 'github':
       yield* handleGithubSource(source, vars, outputDir);
       break;

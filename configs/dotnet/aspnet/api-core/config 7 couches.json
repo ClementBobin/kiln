@@ -1,7 +1,6 @@
 {
   "name": "Config 7 Couches",
   "description": "REST API with Clean Architecture layers (Business, Business.Contracts, Entity, EntitiesContext, Repository, Repository.Contracts, Api)",
-  "version": "1.0.0",
   "tags": ["dotnet", "aspnet", "api", "clean-archi"],
 
   "source": {

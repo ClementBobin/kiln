@@ -1,73 +1,42 @@
 {
   "name": "Config 4 Couches",
   "description": "REST API with Clean Architecture layers (Domain, Application, Infrastructure, Api)",
-  "version": "1.0.0",
   "tags": ["dotnet", "aspnet", "api", "clean-archi"],
 
   "source": {
-    "type": "command",
-    "commands": [
-      {
-        "cmd": "dotnet new sln -n {{project_name}} -o {{project_name}}",
-        "label": "Create solution"
+    "type": "structure",
+    "structure": {
+      "Api": {
+        "type": "web-api",
+        "folders": ["Configuration", "Controllers", "Extensions", "Interceptors", "Middleware"],
+        "references": ["Application", "Application.Tests", "Domain", "Infrastructure", "Infrastructure.Tests"]
       },
-      {
-        "cmd": "dotnet new webapi -o {{project_name}}/{{project_name}}.Api -n {{project_name}}.Api --framework net{{dotnet_version}}",
-        "label": "Create Api project"
+      "Api.Tests": {
+        "type": "xunit",
+        "references": ["Api", "Domain", "Application"]
       },
-      {
-        "cmd": "dotnet new classlib -o {{project_name}}/{{project_name}}.Application -n {{project_name}}.Application --framework net{{dotnet_version}}",
-        "label": "Create Application project"
+      "Application": {
+        "type": "class-library",
+        "folders": ["Interfaces", "Services"],
+        "references": ["Domain", "Tools", "Infrastructure"]
       },
-      {
-        "cmd": "dotnet new classlib -o {{project_name}}/{{project_name}}.Domain -n {{project_name}}.Domain --framework net{{dotnet_version}}",
-        "label": "Create Domain project"
+      "Application.Tests": {
+        "type": "xunit",
+        "references": ["Domain", "Application", "Infrastructure"]
       },
-      {
-        "cmd": "dotnet new classlib -o {{project_name}}/{{project_name}}.Infrastructure -n {{project_name}}.Infrastructure --framework net{{dotnet_version}}",
-        "label": "Create Infrastructure project"
+      "Domain": {
+        "type": "class-library",
+        "folders": ["Dto", "Entities"]
       },
-      {
-        "cmd": "dotnet sln {{project_name}}/{{project_name}}.sln add {{project_name}}/{{project_name}}.Api/{{project_name}}.Api.csproj {{project_name}}/{{project_name}}.Application/{{project_name}}.Application.csproj {{project_name}}/{{project_name}}.Domain/{{project_name}}.Domain.csproj {{project_name}}/{{project_name}}.Infrastructure/{{project_name}}.Infrastructure.csproj",
-        "label": "Add projects to solution"
+      "Infrastructure": {
+        "type": "class-library",
+        "folders": ["Data", "Interfaces", "Repositories"],
+        "references": ["Domain", "Tools"]
+      },
+      "Infrastructure.Tests": {
+        "type": "xunit",
+        "references": ["Domain", "Infrastructure"]
       }
-    ]
-  },
-
-  "structure": {
-    "Api": {
-      "type": "web-api",
-      "folders": ["Configuration", "Controllers", "Extensions", "Interceptors", "Middleware"],
-      "references": ["Application", "Application.Tests", "Domain", "Infrastructure", "Infrastructure.Tests"]
-    },
-    "Api.Tests": {
-      "type": "unit-test",
-      "references": ["Api", "Domain", "Application"],
-      "lib": "xunit"
-    },
-    "Application": {
-      "type": "class-library",
-      "folders": ["Interfaces", "Services"],
-      "references": ["Domain", "Tools", "Infrastructure"]
-    },
-    "Application.Tests": {
-      "type": "unit-test",
-      "references": ["Domain", "Application", "Infrastructure"],
-      "lib": "xunit"
-    },
-    "Domain": {
-      "type": "class-library",
-      "folders": ["Dto", "Entities"]
-    },
-    "Infrastructure": {
-      "type": "class-library",
-      "folders": ["Data", "Interfaces", "Repositories"],
-      "references": ["Domain", "Tools"]
-    },
-    "Infrastructure.Tests": {
-      "type": "unit-test",
-      "lib": "xunit",
-      "references": ["Domain", "Infrastructure"]
     }
   },
 
@@ -97,6 +66,6 @@
   },
 
   "post_init": [
-    { "cmd": "dotnet restore {{project_name}}/{{project_name}}.sln", "label": "Restore NuGet packages" }
+    { "cmd": "dotnet restore", "label": "Restore NuGet packages" }
   ]
 }

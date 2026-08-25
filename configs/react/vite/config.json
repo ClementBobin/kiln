@@ -1,7 +1,6 @@
 {
   "name": "React — Vite + TypeScript",
   "description": "React SPA with Vite, TypeScript, Tailwind CSS, React Query, and React Router v6.",
-  "version": "1.0.0",
   "tags": ["react", "vite", "typescript", "tailwind", "react-query", "spa"],
 
   "source": {

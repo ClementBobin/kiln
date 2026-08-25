@@ -1,7 +1,6 @@
 {
   "name": "ASP.NET Core API — Clean Architecture + EF Core",
   "description": "REST API with Clean Architecture layers (Business, Business.Contracts, Entity, EntitiesContext, Repository, Repository.Contracts, WebApplications)",
-  "version": "1.0.0",
   "tags": ["dotnet", "aspnet", "api", "clean-archi"],
 
   "structure": {

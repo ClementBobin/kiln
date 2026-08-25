@@ -8,7 +8,7 @@
 // Config schema types
 // ──────────────────────────────────────────────────────────────────────────────
 
-export type SourceType = 'command' | 'local' | 'github' | 'script';
+export type SourceType = 'command' | 'local' | 'github' | 'script' | 'structure';
 
 export type LinterType = 'eslint' | 'biome' | 'oxc' | 'pylint' | 'ruff' | 'ktlint' | 'detekt' | 'swiftlint';
 
@@ -30,6 +30,8 @@ export interface ConfigSource {
   ref?: string;
   /** For type === 'local' */
   path?: string;
+  /** For type === 'structure' */
+  structure?: unknown;
 }
 
 export interface ConfigVariable {
@@ -76,7 +78,6 @@ export interface CiCdConfig {
 export interface KilnConfig {
   name: string;
   description?: string;
-  version?: string;
   tags?: string[];
   source: ConfigSource;
   variables?: ConfigVariable[];
@@ -85,7 +86,6 @@ export interface KilnConfig {
   cicd?: CiCdConfig;
   pipeline?: PipelineStep[];
   post_init?: CommandStep[];
-  structure?: unknown;
   templates?: string[];
   plugins?: string[];
 }
