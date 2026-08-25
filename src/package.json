@@ -1,0 +1,46 @@
+{
+  "name": "kiln",
+  "version": "0.1.0",
+  "description": "Interactive CLI project scaffolding tool — scaffold any project in seconds",
+  "keywords": ["cli", "scaffold", "project-init", "generator", "template"],
+  "homepage": "https://github.com/ClementBobin/kiln",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ClementBobin/kiln.git",
+    "directory": "kiln-npm"
+  },
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "bin": {
+    "kiln": "./bin/kiln.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "configs/",
+    "README.md"
+  ],
+  "dependencies": {
+    "@inquirer/prompts": "^7.0.0",
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "execa": "^9.0.0",
+    "ora": "^8.0.0",
+    "fast-glob": "^3.3.0",
+    "jsonc-parser": "^3.2.0",
+    "ajv": "^8.12.0",
+    "ajv-formats": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "vitest": "^1.6.0"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "node bin/kiln.js"
+  }
+}
