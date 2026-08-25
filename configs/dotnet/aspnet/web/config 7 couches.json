@@ -63,7 +63,7 @@
     "editorconfig": true,
     "linter": {
       "enabled": true,
-      "type": "roslyn",
+      "type": "prettier",
       "config_file": ".editorconfig"
     },
     "formatter": {

@@ -1,8 +1,50 @@
 {
-  "name": "ASP.NET Core API — Clean Architecture + EF Core",
+  "name": "Config 7 Couches",
   "description": "REST API with Clean Architecture layers (Business, Business.Contracts, Entity, EntitiesContext, Repository, Repository.Contracts, Api)",
   "version": "1.0.0",
   "tags": ["dotnet", "aspnet", "api", "clean-archi"],
+
+  "source": {
+    "type": "command",
+    "commands": [
+      {
+        "cmd": "dotnet new sln -n {{project_name}} -o {{project_name}}",
+        "label": "Create solution"
+      },
+      {
+        "cmd": "dotnet new webapi -o {{project_name}}/{{project_name}}.Api -n {{project_name}}.Api --framework net{{dotnet_version}}",
+        "label": "Create Api project"
+      },
+      {
+        "cmd": "dotnet new classlib -o {{project_name}}/{{project_name}}.Business -n {{project_name}}.Business --framework net{{dotnet_version}}",
+        "label": "Create Business project"
+      },
+      {
+        "cmd": "dotnet new classlib -o {{project_name}}/{{project_name}}.Business.Contracts -n {{project_name}}.Business.Contracts --framework net{{dotnet_version}}",
+        "label": "Create Business.Contracts project"
+      },
+      {
+        "cmd": "dotnet new classlib -o {{project_name}}/{{project_name}}.Entity -n {{project_name}}.Entity --framework net{{dotnet_version}}",
+        "label": "Create Entity project"
+      },
+      {
+        "cmd": "dotnet new classlib -o {{project_name}}/{{project_name}}.EntitiesContext -n {{project_name}}.EntitiesContext --framework net{{dotnet_version}}",
+        "label": "Create EntitiesContext project"
+      },
+      {
+        "cmd": "dotnet new classlib -o {{project_name}}/{{project_name}}.Repository -n {{project_name}}.Repository --framework net{{dotnet_version}}",
+        "label": "Create Repository project"
+      },
+      {
+        "cmd": "dotnet new classlib -o {{project_name}}/{{project_name}}.Repository.Contracts -n {{project_name}}.Repository.Contracts --framework net{{dotnet_version}}",
+        "label": "Create Repository.Contracts project"
+      },
+      {
+        "cmd": "dotnet sln {{project_name}}/{{project_name}}.sln add {{project_name}}/{{project_name}}.Api/{{project_name}}.Api.csproj {{project_name}}/{{project_name}}.Business/{{project_name}}.Business.csproj {{project_name}}/{{project_name}}.Business.Contracts/{{project_name}}.Business.Contracts.csproj {{project_name}}/{{project_name}}.Entity/{{project_name}}.Entity.csproj {{project_name}}/{{project_name}}.EntitiesContext/{{project_name}}.EntitiesContext.csproj {{project_name}}/{{project_name}}.Repository/{{project_name}}.Repository.csproj {{project_name}}/{{project_name}}.Repository.Contracts/{{project_name}}.Repository.Contracts.csproj",
+        "label": "Add all projects to solution"
+      }
+    ]
+  },
 
   "structure": {
     "Api": {
@@ -54,16 +96,16 @@
   },
 
   "variables": [
-    { "key": "project_name", "label": "Project name", "default": "MyApi" },
-    { "key": "dotnet_version", "label": ".NET version", "choices": ["8", "9", "10"], "default": "10" },
-    { "key": "enable_test", "label": "Enable testing", "choices": ["true", "false"], "default": "false" }
+    { "key": "project_name",   "label": "Project name",   "default": "MyApi" },
+    { "key": "dotnet_version", "label": ".NET version",   "choices": ["8", "9", "10"], "default": "10" },
+    { "key": "enable_test",    "label": "Enable testing", "choices": ["true", "false"], "default": "false" }
   ],
 
   "code_conventions": {
     "editorconfig": true,
     "linter": {
       "enabled": true,
-      "type": "roslyn",
+      "type": "prettier",
       "config_file": ".editorconfig"
     },
     "formatter": {
@@ -79,6 +121,6 @@
   },
 
   "post_init": [
-    { "cmd": "dotnet restore", "label": "Restore NuGet packages" }
+    { "cmd": "dotnet restore {{project_name}}/{{project_name}}.sln", "label": "Restore NuGet packages" }
   ]
 }

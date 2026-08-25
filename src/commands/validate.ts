@@ -1,5 +1,5 @@
 /**
- * validate.js — Validates a kiln config.json and prints typed diagnostics.
+ * validate.ts — Validates a kiln config.json and prints typed diagnostics.
  *
  * Usage:
  *   kiln validate ./my-config/config.json
@@ -10,8 +10,10 @@ import path from 'node:path';
 import fs from 'node:fs';
 import chalk from 'chalk';
 import { loadConfigFile } from '../engine/config-loader.js';
+import console from 'node:console';
+import process from 'node:process';
 
-export function runValidate(filePath) {
+export function runValidate(filePath: string): void {
   const resolved = path.resolve(filePath);
 
   if (!fs.existsSync(resolved)) {

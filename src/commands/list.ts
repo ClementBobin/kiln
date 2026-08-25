@@ -1,15 +1,23 @@
 /**
- * list.js — Lists available scaffold configs.
+ * list.ts — Lists available scaffold configs.
  */
 
 import chalk from 'chalk';
 import { buildConfigTree, loadConfigFile } from '../engine/config-loader.js';
+import type { TreeNode } from '../../types/index.js';
+import type { ListOptions } from '../../types/index.js';
+import console from 'node:console';
 
-function printTree(node, prefix = '', isLast = true, isRoot = false) {
+function printTree(
+  node: TreeNode,
+  prefix = '',
+  isLast = true,
+  isRoot = false
+): void {
   if (!isRoot) {
     const connector = isLast ? '└─ ' : '├─ ';
     if (node.isLeaf) {
-      const { config } = loadConfigFile(node.configPath);
+      const { config } = loadConfigFile(node.configPath!);
       const desc = config?.description ? chalk.dim(` — ${config.description}`) : '';
       console.log(`${prefix}${connector}${chalk.cyan(node.name)}${desc}`);
     } else {
@@ -20,12 +28,12 @@ function printTree(node, prefix = '', isLast = true, isRoot = false) {
   if (!node.isLeaf && node.children?.length) {
     const childPrefix = isRoot ? '' : prefix + (isLast ? '   ' : '│  ');
     node.children.forEach((child, i) => {
-      printTree(child, childPrefix, i === node.children.length - 1);
+      printTree(child, childPrefix, i === node.children!.length - 1);
     });
   }
 }
 
-export function runList(opts = {}) {
+export function runList(opts: ListOptions = {}): void {
   const tree = buildConfigTree(opts.extraConfigs ?? []);
 
   console.log();

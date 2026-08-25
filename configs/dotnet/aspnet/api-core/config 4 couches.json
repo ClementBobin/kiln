@@ -1,11 +1,41 @@
 {
-  "name": "ASP.NET Core API — Clean Architecture + EF Core",
+  "name": "Config 4 Couches",
   "description": "REST API with Clean Architecture layers (Domain, Application, Infrastructure, Api)",
   "version": "1.0.0",
   "tags": ["dotnet", "aspnet", "api", "clean-archi"],
 
+  "source": {
+    "type": "command",
+    "commands": [
+      {
+        "cmd": "dotnet new sln -n {{project_name}} -o {{project_name}}",
+        "label": "Create solution"
+      },
+      {
+        "cmd": "dotnet new webapi -o {{project_name}}/{{project_name}}.Api -n {{project_name}}.Api --framework net{{dotnet_version}}",
+        "label": "Create Api project"
+      },
+      {
+        "cmd": "dotnet new classlib -o {{project_name}}/{{project_name}}.Application -n {{project_name}}.Application --framework net{{dotnet_version}}",
+        "label": "Create Application project"
+      },
+      {
+        "cmd": "dotnet new classlib -o {{project_name}}/{{project_name}}.Domain -n {{project_name}}.Domain --framework net{{dotnet_version}}",
+        "label": "Create Domain project"
+      },
+      {
+        "cmd": "dotnet new classlib -o {{project_name}}/{{project_name}}.Infrastructure -n {{project_name}}.Infrastructure --framework net{{dotnet_version}}",
+        "label": "Create Infrastructure project"
+      },
+      {
+        "cmd": "dotnet sln {{project_name}}/{{project_name}}.sln add {{project_name}}/{{project_name}}.Api/{{project_name}}.Api.csproj {{project_name}}/{{project_name}}.Application/{{project_name}}.Application.csproj {{project_name}}/{{project_name}}.Domain/{{project_name}}.Domain.csproj {{project_name}}/{{project_name}}.Infrastructure/{{project_name}}.Infrastructure.csproj",
+        "label": "Add projects to solution"
+      }
+    ]
+  },
+
   "structure": {
-    "Api" : {
+    "Api": {
       "type": "web-api",
       "folders": ["Configuration", "Controllers", "Extensions", "Interceptors", "Middleware"],
       "references": ["Application", "Application.Tests", "Domain", "Infrastructure", "Infrastructure.Tests"]
@@ -29,7 +59,7 @@
       "type": "class-library",
       "folders": ["Dto", "Entities"]
     },
-    "Infrastructure" : {
+    "Infrastructure": {
       "type": "class-library",
       "folders": ["Data", "Interfaces", "Repositories"],
       "references": ["Domain", "Tools"]
@@ -42,16 +72,16 @@
   },
 
   "variables": [
-    { "key": "project_name", "label": "Project name",       "default": "MyApi" },
-    { "key": "dotnet_version", "label": ".NET version", "choices": ["8", "9", "10"], "default": "10" },
-    { "key": "enable_test", "label": "Enable testing", "choices": ["true", "false"], "default": "false"}
+    { "key": "project_name",   "label": "Project name",   "default": "MyApi" },
+    { "key": "dotnet_version", "label": ".NET version",   "choices": ["8", "9", "10"], "default": "10" },
+    { "key": "enable_test",    "label": "Enable testing", "choices": ["true", "false"], "default": "false" }
   ],
 
   "code_conventions": {
     "editorconfig": true,
     "linter": {
       "enabled": true,
-      "type": "roslyn",
+      "type": "prettier",
       "config_file": ".editorconfig"
     },
     "formatter": {
@@ -67,6 +97,6 @@
   },
 
   "post_init": [
-    { "cmd": "dotnet restore", "label": "Restore NuGet packages" }
+    { "cmd": "dotnet restore {{project_name}}/{{project_name}}.sln", "label": "Restore NuGet packages" }
   ]
 }

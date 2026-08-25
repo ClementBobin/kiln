@@ -1,5 +1,5 @@
 /**
- * run.js — Headless (non-interactive) scaffold command.
+ * run.ts — Headless (non-interactive) scaffold command.
  * Used by: kiln run --config-id react/vite --var project_name=my-app
  */
 
@@ -10,17 +10,24 @@ import chalk from 'chalk';
 
 import { buildConfigTree, findNodeById, loadConfigFile } from '../engine/config-loader.js';
 import { scaffold } from '../engine/scaffolder.js';
+import type { Diagnostic, HeadlessOptions, ScaffoldEventStatus } from '../../types/index.js';
+import console from 'node:console';
+import process from 'node:process';
 
 /** Print a typed diagnostic */
-function printDiagnostic(d) {
+function printDiagnostic(d: Diagnostic): void {
   if (d.level === 'error') {
-    console.error(chalk.red(`  ✖ [error]   ${d.message}`) + (d.path ? chalk.dim(` (${d.path})`) : ''));
+    console.error(
+      chalk.red(`  ✖ [error]   ${d.message}`) + (d.path ? chalk.dim(` (${d.path})`) : '')
+    );
   } else {
-    console.warn(chalk.yellow(`  ⚠ [warning] ${d.message}`) + (d.path ? chalk.dim(` (${d.path})`) : ''));
+    console.warn(
+      chalk.yellow(`  ⚠ [warning] ${d.message}`) + (d.path ? chalk.dim(` (${d.path})`) : '')
+    );
   }
 }
 
-async function promptLine(label, defaultVal) {
+async function promptLine(label: string, defaultVal: string): Promise<string> {
   if (!process.stdin.isTTY) return defaultVal;
   return new Promise((resolve) => {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -31,14 +38,7 @@ async function promptLine(label, defaultVal) {
   });
 }
 
-/**
- * @param {object} opts
- * @param {string}   opts.configId
- * @param {string[]} opts.vars        - raw "key=value" strings
- * @param {string}   [opts.output]
- * @param {string[]} [opts.extraConfigs]
- */
-export async function runHeadless(opts) {
+export async function runHeadless(opts: HeadlessOptions): Promise<void> {
   const outputDir = path.resolve(opts.output ?? process.cwd());
 
   if (!fs.existsSync(outputDir)) {
@@ -55,7 +55,7 @@ export async function runHeadless(opts) {
     process.exit(1);
   }
 
-  const { config, diagnostics } = loadConfigFile(leaf.configPath);
+  const { config, diagnostics } = loadConfigFile(leaf.configPath!);
 
   // Print diagnostics
   for (const d of diagnostics) {
@@ -67,8 +67,13 @@ export async function runHeadless(opts) {
     process.exit(1);
   }
 
+  if (!config) {
+    console.error(chalk.red('✖ Config could not be loaded.'));
+    process.exit(1);
+  }
+
   // Parse --var key=value flags
-  const variables = {};
+  const variables: Record<string, string> = {};
   for (const v of opts.vars ?? []) {
     if (!v.includes('=')) {
       console.error(chalk.red(`✖ Invalid --var "${v}" — expected key=value`));
@@ -89,6 +94,14 @@ export async function runHeadless(opts) {
   console.log(chalk.bold(`▶ Scaffolding ${chalk.cyan(config.name)} into ${chalk.green(outputDir)}`));
   console.log();
 
+  const icons: Record<ScaffoldEventStatus, string> = {
+    running: '⏳',
+    ok: '✅',
+    error: '✖',
+    info: 'ℹ',
+    warning: '⚠',
+  };
+
   let hasError = false;
 
   for await (const event of scaffold({
@@ -97,7 +110,6 @@ export async function runHeadless(opts) {
     variables,
     outputDir,
   })) {
-    const icons = { running: '⏳', ok: '✅', error: '✖', info: 'ℹ', warning: '⚠' };
     const icon = icons[event.status] ?? '•';
     if (event.status === 'error') {
       console.error(`${chalk.red(icon)} ${chalk.red(event.message)}`);

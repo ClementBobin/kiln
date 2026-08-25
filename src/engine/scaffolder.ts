@@ -1,46 +1,36 @@
 /**
- * scaffolder.js
+ * scaffolder.ts
  *
  * Executes scaffold steps for a given config, emitting status events.
- * Mirrors the Python forge/engine/scaffolder.py logic.
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
-import os from 'node:os';
 import { execa } from 'execa';
+import type { ScaffoldEvent, ScaffoldOptions } from '../../types/index.js';
+import type { ConfigSource } from '../../types/index.js';
+import process from 'node:process';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Template interpolation  {{variable}}
 // ──────────────────────────────────────────────────────────────────────────────
 
-/**
- * @param {string} str
- * @param {Record<string,string>} vars
- * @returns {string}
- */
-function interpolate(str, vars) {
-  return str.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key) => vars[key] ?? _);
+function interpolate(str: string, vars: Record<string, string>): string {
+  return str.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key: string) => vars[key] ?? _);
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Step runner
+// Shell command runner
 // ──────────────────────────────────────────────────────────────────────────────
 
-/**
- * Run a shell command, streaming stdio directly to the terminal.
- * @param {string} cmd
- * @param {string} cwd
- * @returns {Promise<number>} exit code
- */
-async function runCommand(cmd, cwd) {
-  const shell = process.platform === 'win32' ? true : '/bin/sh';
+async function runCommand(cmd: string, cwd: string): Promise<number> {
+  const shell: string | true = process.platform === 'win32' ? true : '/bin/sh';
   const child = execa(cmd, { cwd, shell, stdio: 'inherit' });
   try {
     await child;
     return 0;
-  } catch (err) {
-    return err.exitCode ?? 1;
+  } catch (err: unknown) {
+    return (err as { exitCode?: number }).exitCode ?? 1;
   }
 }
 
@@ -48,11 +38,11 @@ async function runCommand(cmd, cwd) {
 // Git helpers
 // ──────────────────────────────────────────────────────────────────────────────
 
-async function gitInit(cwd) {
+async function gitInit(cwd: string): Promise<void> {
   await execa('git', ['init'], { cwd, stdio: 'pipe' });
 }
 
-async function gitCommit(cwd, message = 'chore: initial scaffold') {
+async function gitCommit(cwd: string, message = 'chore: initial scaffold'): Promise<void> {
   await execa('git', ['add', '.'], { cwd, stdio: 'pipe' });
   try {
     await execa('git', ['commit', '-m', message], { cwd, stdio: 'pipe' });
@@ -65,7 +55,11 @@ async function gitCommit(cwd, message = 'chore: initial scaffold') {
 // Source handlers
 // ──────────────────────────────────────────────────────────────────────────────
 
-async function* handleCommandSource(source, vars, outputDir) {
+async function* handleCommandSource(
+  source: ConfigSource,
+  vars: Record<string, string>,
+  outputDir: string
+): AsyncGenerator<ScaffoldEvent> {
   const commands = source.commands ?? [];
   for (const step of commands) {
     const cmd = interpolate(step.cmd, vars);
@@ -80,7 +74,12 @@ async function* handleCommandSource(source, vars, outputDir) {
   }
 }
 
-async function* handleLocalSource(source, vars, outputDir, configDir) {
+async function* handleLocalSource(
+  source: ConfigSource,
+  vars: Record<string, string>,
+  outputDir: string,
+  configDir: string
+): AsyncGenerator<ScaffoldEvent> {
   const srcPath = source.path
     ? path.resolve(configDir, interpolate(source.path, vars))
     : configDir;
@@ -89,12 +88,16 @@ async function* handleLocalSource(source, vars, outputDir, configDir) {
   try {
     copyDir(srcPath, outputDir, vars);
     yield { status: 'ok', message: 'Files copied' };
-  } catch (err) {
-    yield { status: 'error', message: `Copy failed: ${err.message}` };
+  } catch (err: unknown) {
+    yield { status: 'error', message: `Copy failed: ${(err as Error).message}` };
   }
 }
 
-async function* handleGithubSource(source, vars, outputDir) {
+async function* handleGithubSource(
+  source: ConfigSource,
+  vars: Record<string, string>,
+  outputDir: string
+): AsyncGenerator<ScaffoldEvent> {
   const repo = interpolate(source.repo ?? '', vars);
   const ref = interpolate(source.ref ?? 'HEAD', vars);
   const cmd = `git clone --depth=1 --branch ${ref} https://github.com/${repo}.git .`;
@@ -111,17 +114,17 @@ async function* handleGithubSource(source, vars, outputDir) {
 // File utilities
 // ──────────────────────────────────────────────────────────────────────────────
 
-function copyDir(src, dest, vars) {
+function copyDir(src: string, dest: string, vars: Record<string, string>): void {
   fs.mkdirSync(dest, { recursive: true });
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
     const srcPath = path.join(src, entry.name);
-    const destName = interpolate(entry.name, vars ?? {});
+    const destName = interpolate(entry.name, vars);
     const destPath = path.join(dest, destName);
     if (entry.isDirectory()) {
       copyDir(srcPath, destPath, vars);
     } else {
       let content = fs.readFileSync(srcPath, 'utf8');
-      content = interpolate(content, vars ?? {});
+      content = interpolate(content, vars);
       fs.writeFileSync(destPath, content, 'utf8');
     }
   }
@@ -132,22 +135,13 @@ function copyDir(src, dest, vars) {
 // ──────────────────────────────────────────────────────────────────────────────
 
 /**
- * @typedef {{ status: 'running'|'ok'|'error'|'info', message: string }} ScaffoldEvent
- */
-
-/**
  * Scaffold a project from a loaded config object.
- *
- * @param {object}             options
- * @param {object}             options.config       - parsed config.json
- * @param {string}             options.configDir    - directory where config lives
- * @param {Record<string,string>} options.variables - template variables
- * @param {string}             options.outputDir    - destination directory
- * @returns {AsyncGenerator<ScaffoldEvent>}
+ * Yields ScaffoldEvent objects as work proceeds.
  */
-export async function* scaffold({ config, configDir, variables, outputDir }) {
+export async function* scaffold(options: ScaffoldOptions): AsyncGenerator<ScaffoldEvent> {
+  const { config, configDir, variables, outputDir } = options;
   const vars = variables ?? {};
-  const source = config.source ?? {};
+  const source = config.source ?? ({} as ConfigSource);
 
   // ── 1. Source ──────────────────────────────────────────────────────────────
   switch (source.type) {
@@ -161,7 +155,10 @@ export async function* scaffold({ config, configDir, variables, outputDir }) {
       yield* handleGithubSource(source, vars, outputDir);
       break;
     default:
-      yield { status: 'info', message: `Source type "${source.type}" — skipping (not yet supported in JS CLI)` };
+      yield {
+        status: 'info',
+        message: `Source type "${source.type}" — skipping (not yet supported in JS CLI)`,
+      };
   }
 
   // ── 2. post_init commands ──────────────────────────────────────────────────
@@ -183,8 +180,8 @@ export async function* scaffold({ config, configDir, variables, outputDir }) {
     await gitInit(outputDir);
     await gitCommit(outputDir);
     yield { status: 'ok', message: 'Git repository initialised' };
-  } catch (err) {
-    yield { status: 'warning', message: `git init skipped: ${err.message}` };
+  } catch (err: unknown) {
+    yield { status: 'warning', message: `git init skipped: ${(err as Error).message}` };
   }
 
   yield { status: 'info', message: `Done! Project created in ${outputDir}` };

@@ -1,5 +1,5 @@
 /**
- * config-loader.js
+ * config-loader.ts
  *
  * Loads kiln config.json / config.jsonc files from the built-in configs
  * directory and from extra user-supplied directories.
@@ -14,32 +14,33 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parse as parseJsonc } from 'jsonc-parser';
-import Ajv from 'ajv';
+import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
+// @ts-expect-error — ajv ships as CJS; default export is the class under ESM interop
+import AjvCtor from 'ajv';
+// @ts-expect-error — ajv-formats ships as CJS
 import addFormats from 'ajv-formats';
+import type Ajv from 'ajv';
 import { configSchema } from './schema.js';
+import type { Diagnostic, LoadConfigResult } from '../../types/index.js';
+import type { TreeNode } from '../../types/index.js';
+import type { KilnConfig } from '../../types/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BUILTIN_CONFIGS = path.resolve(__dirname, '../../configs');
 
-const ajv = new Ajv({ allErrors: true, strict: false });
-addFormats(ajv);
+const ajv = new (AjvCtor as typeof Ajv)({ allErrors: true, strict: false });
+(addFormats as (instance: Ajv) => void)(ajv);
 const _validate = ajv.compile(configSchema);
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Diagnostics
+// Validation
 // ──────────────────────────────────────────────────────────────────────────────
-
-/** @typedef {{ level: 'error'|'warning', path: string, message: string }} Diagnostic */
 
 /**
  * Validate a parsed config object and return typed diagnostics.
- * @param {object} config - parsed JSON object
- * @returns {Diagnostic[]}
  */
-export function validateConfig(config) {
-  /** @type {Diagnostic[]} */
-  const diagnostics = [];
+export function validateConfig(config: KilnConfig): Diagnostic[] {
+  const diagnostics: Diagnostic[] = [];
 
   const valid = _validate(config);
   if (!valid && _validate.errors) {
@@ -69,7 +70,7 @@ export function validateConfig(config) {
   }
 
   if (config.variables) {
-    const keys = new Set();
+    const keys = new Set<string>();
     for (const v of config.variables) {
       if (keys.has(v.key)) {
         diagnostics.push({
@@ -86,30 +87,19 @@ export function validateConfig(config) {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Tree
+// File loading
 // ──────────────────────────────────────────────────────────────────────────────
-
-/**
- * @typedef {object} TreeNode
- * @property {string}     name
- * @property {string}     filePath   - absolute path to directory
- * @property {boolean}    isLeaf
- * @property {TreeNode[]} [children]
- * @property {string}     [configPath]  - only on leaves
- */
 
 /**
  * Load config file (json/jsonc), parse it, validate it.
  * Returns { config, diagnostics }.
- * @param {string} filePath
  */
-export function loadConfigFile(filePath) {
+export function loadConfigFile(filePath: string): LoadConfigResult {
   const raw = fs.readFileSync(filePath, 'utf8');
-  const errors = [];
-  const config = parseJsonc(raw, errors, { allowTrailingComma: true });
+  const errors: ParseError[] = [];
+  const config = parseJsonc(raw, errors, { allowTrailingComma: true }) as KilnConfig;
 
-  /** @type {Diagnostic[]} */
-  const diagnostics = [];
+  const diagnostics: Diagnostic[] = [];
 
   if (errors.length) {
     for (const e of errors) {
@@ -126,11 +116,15 @@ export function loadConfigFile(filePath) {
   return { config, diagnostics };
 }
 
-function formatName(folderName) {
+// ──────────────────────────────────────────────────────────────────────────────
+// Tree helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
+function formatName(folderName: string): string {
   return folderName.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function findManifest(dir) {
+function findManifest(dir: string): string | null {
   const jsonc = path.join(dir, 'config.jsonc');
   if (fs.existsSync(jsonc)) return jsonc;
   const json = path.join(dir, 'config.json');
@@ -138,7 +132,7 @@ function findManifest(dir) {
   return null;
 }
 
-function getDisplayName(manifestPath, fallback) {
+function getDisplayName(manifestPath: string, fallback: string): string {
   try {
     const { config } = loadConfigFile(manifestPath);
     return config?.name || fallback;
@@ -147,15 +141,14 @@ function getDisplayName(manifestPath, fallback) {
   }
 }
 
-function isConfigFile(filename) {
+function isConfigFile(filename: string): boolean {
   const lower = filename.toLowerCase();
   return lower.startsWith('config') && (lower.endsWith('.json') || lower.endsWith('.jsonc'));
 }
 
-function scanDir(dir) {
-  /** @type {TreeNode[]} */
-  const nodes = [];
-  let entries;
+function scanDir(dir: string): TreeNode[] {
+  const nodes: TreeNode[] = [];
+  let entries: fs.Dirent[];
   try {
     entries = fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
       a.name.toLowerCase().localeCompare(b.name.toLowerCase())
@@ -166,7 +159,11 @@ function scanDir(dir) {
 
   const configFiles = entries.filter((e) => e.isFile() && isConfigFile(e.name));
   const subdirs = entries.filter(
-    (e) => e.isDirectory() && !e.name.startsWith('.') && e.name !== '__pycache__' && e.name !== 'node_modules'
+    (e) =>
+      e.isDirectory() &&
+      !e.name.startsWith('.') &&
+      e.name !== '__pycache__' &&
+      e.name !== 'node_modules'
   );
 
   // Standard single-manifest leaf
@@ -180,10 +177,13 @@ function scanDir(dir) {
 
   // Multiple variants or non-standard name — nav node
   if (configFiles.length) {
-    const children = [];
+    const children: TreeNode[] = [];
     for (const cf of configFiles) {
       const manifestPath = path.join(dir, cf.name);
-      const fallback = configFiles.length > 1 ? formatName(path.parse(cf.name).name) : formatName(path.basename(dir));
+      const fallback =
+        configFiles.length > 1
+          ? formatName(path.parse(cf.name).name)
+          : formatName(path.basename(dir));
       const name = configFiles.length > 1 ? fallback : getDisplayName(manifestPath, fallback);
       children.push({ name, filePath: dir, isLeaf: true, configPath: manifestPath });
     }
@@ -197,7 +197,7 @@ function scanDir(dir) {
   }
 
   // No manifest — pure navigation node
-  const children = [];
+  const children: TreeNode[] = [];
   for (const sub of subdirs) {
     children.push(...scanDir(path.join(dir, sub.name)));
   }
@@ -209,24 +209,24 @@ function scanDir(dir) {
 
 /**
  * Build the merged config tree from built-in + extra dirs.
- * @param {string[]} extraDirs
- * @returns {TreeNode}
  */
-export function buildConfigTree(extraDirs = []) {
+export function buildConfigTree(extraDirs: string[] = []): TreeNode {
   const roots = [BUILTIN_CONFIGS, ...extraDirs];
-  const root = { name: 'root', filePath: '/', isLeaf: false, children: [] };
+  const root: TreeNode = { name: 'root', filePath: '/', isLeaf: false, children: [] };
 
   for (const rootDir of roots) {
     if (!fs.existsSync(rootDir)) continue;
-    let topLevel;
+    let topLevel: fs.Dirent[];
     try {
       topLevel = fs.readdirSync(rootDir, { withFileTypes: true });
     } catch {
       continue;
     }
-    for (const entry of topLevel.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))) {
+    for (const entry of topLevel.sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    )) {
       if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
-      root.children.push(...scanDir(path.join(rootDir, entry.name)));
+      root.children!.push(...scanDir(path.join(rootDir, entry.name)));
     }
   }
 
@@ -235,17 +235,17 @@ export function buildConfigTree(extraDirs = []) {
 
 /**
  * Walk the tree to find a leaf by slash-separated id, e.g. "react/vite".
- * @param {TreeNode} root
- * @param {string} id
- * @returns {TreeNode|null}
  */
-export function findNodeById(root, id) {
-  const parts = id.trim('/').split('/').filter(Boolean);
-  let node = root;
+export function findNodeById(root: TreeNode, id: string): TreeNode | null {
+  const parts = id.replace(/^\/|\/$/g, '').split('/').filter(Boolean);
+  let node: TreeNode = root;
   for (const part of parts) {
     const match = (node.children ?? []).find((c) => {
       const slug = path.basename(c.filePath);
-      return slug === part || slug.toLowerCase().replace(/[-_]/g, ' ') === part.toLowerCase().replace(/[-_]/g, ' ');
+      return (
+        slug === part ||
+        slug.toLowerCase().replace(/[-_]/g, ' ') === part.toLowerCase().replace(/[-_]/g, ' ')
+      );
     });
     if (!match) return null;
     node = match;

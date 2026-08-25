@@ -1,5 +1,5 @@
 /**
- * pick.js — Interactive config picker for kiln CLI.
+ * pick.ts — Interactive config picker for kiln CLI.
  *
  * Uses @inquirer/prompts to walk the config tree and collect variables,
  * then runs the scaffolder.
@@ -7,19 +7,22 @@
 
 import path from 'node:path';
 import fs from 'node:fs';
-import { select, input, checkbox } from '@inquirer/prompts';
+import { select, input } from '@inquirer/prompts';
 import chalk from 'chalk';
-import ora from 'ora';
 
 import { buildConfigTree, loadConfigFile } from '../engine/config-loader.js';
 import { scaffold } from '../engine/scaffolder.js';
+import type { Diagnostic } from '../../types/index.js';
+import type { TreeNode, ConfigVariable, PickOptions, ScaffoldEventStatus } from '../../types/index.js';
+import console from 'node:console';
+import process from 'node:process';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────────────────────────────────────
 
-/** Print a typed diagnostic from config validation */
-function printDiagnostics(diagnostics, configPath) {
+/** Print typed diagnostics from config validation */
+function printDiagnostics(diagnostics: Diagnostic[], configPath: string): void {
   if (!diagnostics.length) return;
   console.log();
   for (const d of diagnostics) {
@@ -34,18 +37,18 @@ function printDiagnostics(diagnostics, configPath) {
 }
 
 /** Recursively prompt the user to navigate the tree until a leaf is selected */
-async function pickLeaf(node) {
+async function pickLeaf(node: TreeNode): Promise<TreeNode | null> {
   if (node.isLeaf) return node;
 
   const choices = (node.children ?? []).map((child) => ({
     name: child.isLeaf ? `  ${child.name}` : `▸ ${child.name}`,
-    value: child,
+    value: child as TreeNode | null,
     description: child.isLeaf ? chalk.dim(child.configPath) : chalk.dim('folder'),
   }));
 
-  choices.push({ name: chalk.dim('‹ back'), value: null });
+  choices.push({ name: chalk.dim('‹ back'), value: null, description: undefined });
 
-  const chosen = await select({
+  const chosen = await select<TreeNode | null>({
     message: chalk.bold('Select a template:'),
     choices,
     pageSize: 16,
@@ -56,11 +59,13 @@ async function pickLeaf(node) {
 }
 
 /** Prompt for each declared variable in the config */
-async function collectVariables(variables) {
-  const result = {};
+async function collectVariables(
+  variables: ConfigVariable[] | undefined
+): Promise<Record<string, string>> {
+  const result: Record<string, string> = {};
   for (const v of variables ?? []) {
     if (v.choices?.length) {
-      result[v.key] = await select({
+      result[v.key] = await select<string>({
         message: chalk.cyan(`${v.label ?? v.key}:`),
         choices: v.choices.map((c) => ({ name: c, value: c })),
         default: v.default,
@@ -70,7 +75,7 @@ async function collectVariables(variables) {
         message: chalk.cyan(`${v.label ?? v.key}:`),
         default: v.default ?? '',
         validate: v.required
-          ? (s) => (s.trim() ? true : `${v.key} is required`)
+          ? (s: string) => (s.trim() ? true : `${v.key} is required`)
           : undefined,
       });
     }
@@ -82,12 +87,7 @@ async function collectVariables(variables) {
 // Main
 // ──────────────────────────────────────────────────────────────────────────────
 
-/**
- * @param {object} opts
- * @param {string}   [opts.output]   - output directory (default: cwd)
- * @param {string[]} [opts.extraConfigs] - extra config dirs
- */
-export async function runPick(opts = {}) {
+export async function runPick(opts: PickOptions = {}): Promise<void> {
   const outputDir = path.resolve(opts.output ?? process.cwd());
 
   if (!fs.existsSync(outputDir)) {
@@ -107,8 +107,8 @@ export async function runPick(opts = {}) {
   console.log();
 
   // Walk tree
-  let leaf = null;
-  let navNode = tree;
+  let leaf: TreeNode | null = null;
+  const navNode = tree;
 
   while (!leaf) {
     const picked = await pickLeaf(navNode);
@@ -123,17 +123,22 @@ export async function runPick(opts = {}) {
   }
 
   // Load + validate config
-  const { config, diagnostics } = loadConfigFile(leaf.configPath);
+  const { config, diagnostics } = loadConfigFile(leaf.configPath!);
 
   if (diagnostics.some((d) => d.level === 'error')) {
     console.log(chalk.red.bold('\n  Config has errors — cannot scaffold:\n'));
-    printDiagnostics(diagnostics, leaf.configPath);
+    printDiagnostics(diagnostics, leaf.configPath!);
     process.exit(1);
   }
 
   if (diagnostics.some((d) => d.level === 'warning')) {
     console.log(chalk.yellow.bold('  Config warnings:'));
-    printDiagnostics(diagnostics, leaf.configPath);
+    printDiagnostics(diagnostics, leaf.configPath!);
+  }
+
+  if (!config) {
+    console.error(chalk.red('✖ Config could not be loaded.'));
+    process.exit(1);
   }
 
   // Show description
@@ -145,7 +150,6 @@ export async function runPick(opts = {}) {
   const variables = await collectVariables(config.variables);
 
   // Confirm
-  const projectName = variables.project_name ?? path.basename(outputDir);
   console.log();
   console.log(
     chalk.bold(`  Scaffolding `) +
@@ -155,6 +159,15 @@ export async function runPick(opts = {}) {
   );
   console.log();
 
+  // Status icons
+  const icons: Record<ScaffoldEventStatus, string> = {
+    running: chalk.yellow('⏳'),
+    ok: chalk.green('✅'),
+    error: chalk.red('✖'),
+    info: chalk.blue('ℹ'),
+    warning: chalk.yellow('⚠'),
+  };
+
   // Run scaffold
   for await (const event of scaffold({
     config,
@@ -162,7 +175,6 @@ export async function runPick(opts = {}) {
     variables,
     outputDir,
   })) {
-    const icons = { running: chalk.yellow('⏳'), ok: chalk.green('✅'), error: chalk.red('✖'), info: chalk.blue('ℹ'), warning: chalk.yellow('⚠') };
     const icon = icons[event.status] ?? '•';
     if (event.status === 'error') {
       console.log(`  ${icon} ${chalk.red(event.message)}`);

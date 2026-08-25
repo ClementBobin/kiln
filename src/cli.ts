@@ -1,5 +1,5 @@
 /**
- * cli.js — Main CLI entry point.
+ * cli.ts — Main CLI entry point.
  *
  * Commands:
  *   kiln                         Interactive picker (default)
@@ -15,9 +15,16 @@ import path from 'node:path';
 import chalk from 'chalk';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const pkg = JSON.parse(readFileSync(path.resolve(__dirname, '../package.json'), 'utf8'));
+const pkg = JSON.parse(readFileSync(path.resolve(__dirname, '../package.json'), 'utf8')) as {
+  version: string;
+};
 
-export async function run() {
+/** Commander helper to collect repeatable options into an array */
+function collect(value: string, previous: string[]): string[] {
+  return previous.concat([value]);
+}
+
+export async function run(): Promise<void> {
   const program = new Command();
 
   program
@@ -29,7 +36,7 @@ export async function run() {
   program
     .option('-o, --output <dir>', 'Output directory (default: cwd)')
     .option('-c, --configs <dir>', 'Extra configs directory')
-    .action(async (opts) => {
+    .action(async (opts: { output?: string; configs?: string }) => {
       const { runPick } = await import('./commands/pick.js');
       await runPick({
         output: opts.output,
@@ -45,22 +52,24 @@ export async function run() {
     .option('-o, --output <dir>', 'Output directory (default: cwd)')
     .option('--var <key=value>', 'Set a template variable (repeatable)', collect, [])
     .option('-c, --configs <dir>', 'Extra configs directory')
-    .action(async (opts) => {
-      const { runHeadless } = await import('./commands/run.js');
-      await runHeadless({
-        configId: opts.configId,
-        vars: opts.var,
-        output: opts.output,
-        extraConfigs: opts.configs ? [opts.configs] : [],
-      });
-    });
+    .action(
+      async (opts: { configId: string; var: string[]; output?: string; configs?: string }) => {
+        const { runHeadless } = await import('./commands/run.js');
+        await runHeadless({
+          configId: opts.configId,
+          vars: opts.var,
+          output: opts.output,
+          extraConfigs: opts.configs ? [opts.configs] : [],
+        });
+      }
+    );
 
   // ── kiln list ──────────────────────────────────────────────────────────────
   program
     .command('list')
     .description('List all available scaffold configs')
     .option('-c, --configs <dir>', 'Extra configs directory')
-    .action(async (opts) => {
+    .action(async (opts: { configs?: string }) => {
       const { runList } = await import('./commands/list.js');
       runList({ extraConfigs: opts.configs ? [opts.configs] : [] });
     });
@@ -69,15 +78,10 @@ export async function run() {
   program
     .command('validate <file>')
     .description('Validate a kiln config.json/config.jsonc file')
-    .action(async (file) => {
+    .action(async (file: string) => {
       const { runValidate } = await import('./commands/validate.js');
       runValidate(file);
     });
 
   await program.parseAsync(process.argv);
-}
-
-/** Commander helper to collect repeatable options into an array */
-function collect(value, previous) {
-  return previous.concat([value]);
 }

@@ -3,7 +3,9 @@
  * Used to validate user-provided configs and emit typed warnings/errors.
  */
 
-export const configSchema = {
+import type { SchemaObject } from 'ajv';
+
+export const configSchema: SchemaObject = {
   $schema: 'http://json-schema.org/draft-07/schema#',
   type: 'object',
   required: ['name', 'source'],
@@ -79,7 +81,10 @@ export const configSchema = {
           type: 'object',
           properties: {
             enabled: { type: 'boolean' },
-            type: { type: 'string', enum: ['eslint', 'biome', 'oxc', 'pylint', 'ruff', 'ktlint', 'detekt', 'swiftlint'] },
+            type: {
+              type: 'string',
+              enum: ['eslint', 'biome', 'oxc', 'pylint', 'ruff', 'ktlint', 'detekt', 'swiftlint'],
+            },
             config_file: { type: 'string' },
           },
         },
@@ -87,7 +92,10 @@ export const configSchema = {
           type: 'object',
           properties: {
             enabled: { type: 'boolean' },
-            type: { type: 'string', enum: ['prettier', 'biome', 'black', 'ruff', 'ktlint', 'swiftformat'] },
+            type: {
+              type: 'string',
+              enum: ['prettier', 'biome', 'black', 'ruff', 'ktlint', 'swiftformat'],
+            },
           },
         },
         commit_conventions: {
