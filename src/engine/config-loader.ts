@@ -60,6 +60,14 @@ export function validateConfig(config: KilnConfig): Diagnostic[] {
     }
   }
 
+  if (!config.source && !config.structure) {
+    diagnostics.push({
+      level: 'error',
+      path: '/',
+      message: 'Config must have at least one of "source" or "structure" defined',
+    });
+  }
+
   // Extra semantic warnings beyond JSON Schema
   if (config.source?.type === 'command' && !config.source.commands?.length) {
     diagnostics.push({

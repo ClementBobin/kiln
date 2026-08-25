@@ -8,7 +8,11 @@ import type { SchemaObject } from 'ajv';
 export const configSchema: SchemaObject = {
   $schema: 'http://json-schema.org/draft-07/schema#',
   type: 'object',
-  required: ['name', 'source'],
+  required: ['name'],
+  anyOf: [
+    { required: ['source'] },
+    { required: ['structure'] },
+  ],
   additionalProperties: true,
   properties: {
     name: {
