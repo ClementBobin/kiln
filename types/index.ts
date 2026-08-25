@@ -7,3 +7,4 @@ export * from './diagnostics.js';
 export * from './scaffold.js';
 export * from './tree.js';
 export * from './cli.js';
+export * from './runtime.js';
