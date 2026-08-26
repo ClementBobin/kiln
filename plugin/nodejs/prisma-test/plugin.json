@@ -1,0 +1,18 @@
+{
+  "name": "Prisma ORM Testing",
+  "description": "Sets up Prisma ORM for testing purposes.",
+  "tags": ["nodejs", "prisma", "orm", "database", "testing"],
+
+  "dependencies": [
+    "jest-mock-extended@2.0.4 --save-dev"
+  ],
+
+  "apply": {
+    "type": "script",
+    "file": "setup_testing_prisma.py"
+  },
+
+  "depend": [
+    "prisma"
+  ]
+}
