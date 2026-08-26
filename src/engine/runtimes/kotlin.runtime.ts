@@ -30,7 +30,7 @@ export class KotlinRuntimeEngine extends BaseRuntimeEngine {
     }
 
     // 1. Auto-determine package name from project or fallback to variables/default
-    let packageName = vars['package_name'] ?? this.detectPackageName(outputDir);
+    let packageName = this.detectPackageName(outputDir);
     if (!packageName) {
       packageName = 'com.example.myapp';
       yield { status: 'info', message: `Could not detect package name automatically. Using default: ${packageName}` };
@@ -96,7 +96,7 @@ export class KotlinRuntimeEngine extends BaseRuntimeEngine {
       const walkDirs = (currentDir: string, currentPackage: string[] = []): string | null => {
         const entries = fs.readdirSync(currentDir, { withFileTypes: true });
         const subDirs = entries.filter(e => e.isDirectory() && !e.name.startsWith('.'));
-        
+
         // If there's a single directory and no files yet, dive deeper
         if (subDirs.length === 1) {
           return walkDirs(path.join(currentDir, subDirs[0].name), [...currentPackage, subDirs[0].name]);

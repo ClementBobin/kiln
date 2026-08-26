@@ -21,9 +21,7 @@
 
   "variables": [
     { "key": "project_name", "label": "Project name",    "default": "my-app" },
-    { "key": "author",       "label": "Author name",     "default": "Developer" },
-    { "key": "description",  "label": "Short description","default": "A Next.js application" },
-    { "key": "node_version", "label": "Node.js version", "choices": ["20", "22"], "default": "22" }
+    { "key": "description",  "label": "Short description","default": "A Next.js application" }
   ],
 
   "code_conventions": {
