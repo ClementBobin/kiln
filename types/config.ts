@@ -12,9 +12,11 @@ import type { Structures } from "./index.js";
 
 export type SourceType = 'command' | 'local' | 'github' | 'script';
 
-export type LinterType = 'eslint' | 'biome' | 'oxc' | 'pylint' | 'ruff' | 'ktlint' | 'detekt' | 'swiftlint';
+export type RuntimeName = 'node' | 'dotnet' | 'kotlin' | 'android';
 
-export type FormatterType = 'prettier' | 'biome' | 'black' | 'ruff' | 'ktlint' | 'swiftformat';
+export type LinterType = 'eslint' | 'biome' | 'oxc' | 'pylint' | 'ruff' | 'ktlint' | 'detekt' | 'swiftlint' | 'roslyn';
+
+export type FormatterType = 'prettier' | 'biome' | 'black' | 'ruff' | 'ktlint' | 'swiftformat' | 'dotnet-format';
 
 export interface CommandStep {
   cmd: string;
@@ -67,7 +69,10 @@ export interface CodeConventions {
 
 export interface KilnConfig {
   name: string;
+  tags?: string[];
   description?: string;
+  /** Runtime engine to use. Inferred from source/structure when absent. */
+  runtime?: RuntimeName;
   source?: ConfigSource;
   structure?: Structures;
   variables?: ConfigVariable[];

@@ -9,7 +9,7 @@ import readline from 'node:readline';
 import chalk from 'chalk';
 
 import { buildConfigTree, findNodeById, loadConfigFile } from '../engine/config-loader.js';
-import { scaffold } from '../engine/scaffolder.js';
+import { scaffold } from '../engine/runtimes/index.js';
 import type { Diagnostic, HeadlessOptions, ScaffoldEventStatus } from '../../types/index.js';
 import console from 'node:console';
 import process from 'node:process';
@@ -107,7 +107,7 @@ export async function runHeadless(opts: HeadlessOptions): Promise<void> {
   for await (const event of scaffold({
     config,
     configDir: leaf.filePath,
-    variables,
+    variables: variables,
     outputDir,
   })) {
     const icon = icons[event.status] ?? '•';

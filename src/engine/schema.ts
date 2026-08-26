@@ -34,6 +34,11 @@ export const configSchema: SchemaObject = {
       items: { type: 'string' },
       description: 'Tags for filtering/search',
     },
+    runtime: {
+      type: 'string',
+      enum: ['node', 'dotnet', 'kotlin', 'android'],
+      description: 'Runtime engine to use. Inferred when absent.',
+    },
     source: {
       type: 'object',
       required: ['type'],
@@ -87,7 +92,7 @@ export const configSchema: SchemaObject = {
             enabled: { type: 'boolean' },
             type: {
               type: 'string',
-              enum: ['eslint', 'biome', 'oxc', 'pylint', 'ruff', 'ktlint', 'detekt', 'swiftlint'],
+              enum: ['eslint', 'biome', 'oxc', 'pylint', 'ruff', 'ktlint', 'detekt', 'swiftlint', 'roslyn'],
             },
             config_file: { type: 'string' },
           },
@@ -98,7 +103,7 @@ export const configSchema: SchemaObject = {
             enabled: { type: 'boolean' },
             type: {
               type: 'string',
-              enum: ['prettier', 'biome', 'black', 'ruff', 'ktlint', 'swiftformat'],
+              enum: ['prettier', 'biome', 'black', 'ruff', 'ktlint', 'swiftformat', 'dotnet-format'],
             },
           },
         },

@@ -43,10 +43,10 @@ async function pickLeaf(node: TreeNode): Promise<TreeNode | null> {
   const choices = (node.children ?? []).map((child) => ({
     name: child.isLeaf ? `  ${child.name}` : `▸ ${child.name}`,
     value: child as TreeNode | null,
-    description: child.isLeaf ? chalk.dim(child.configPath) : chalk.dim('folder'),
+    description: child.isLeaf ? chalk.dim(child.configPath ?? '') : chalk.dim('folder'),
   }));
 
-  choices.push({ name: chalk.dim('‹ back'), value: null, description: undefined });
+  choices.push({ name: chalk.dim('‹ back'), value: null, description: '' });
 
   const chosen = await select<TreeNode | null>({
     message: chalk.bold('Select a template:'),

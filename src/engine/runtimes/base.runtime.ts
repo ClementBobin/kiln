@@ -1,32 +1,98 @@
 /**
- * base-runtime.ts
+ * base.runtime.ts
  *
- * Base runtime engine for scaffolders.
+ * Abstract base class shared by all runtime engines.
+ * Provides: interpolation, shell runner, git helpers, source handlers,
+ * post_init runner, and the top-level scaffold() generator.
+ *
+ * Subclasses implement handleStructure() for structure-based scaffolding.
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { execa } from 'execa';
-import type { ScaffoldEvent, ScaffoldOptions } from '../../types/index.js';
-import type { ConfigSource } from '../../types/index.js';
+import type { ScaffoldEvent, ScaffoldOptions } from '../../../types/index.js';
+import type { ConfigSource, KilnConfig } from '../../../types/index.js';
+import type { Diagnostic } from '../../../types/index.js';
 import process from 'node:process';
 
 export abstract class BaseRuntimeEngine {
   abstract name: string;
 
-  /**
-   * Abstract method implemented by runtime-specific engines (e.g. DotNetRuntimeEngine).
-   */
-  abstract handleStructureSource(
-    source: ConfigSource,
-    vars: Record<string, string>,
-    outputDir: string,
-    projectName: string
-  ): AsyncGenerator<ScaffoldEvent>;
+  // ── Subclass hook ────────────────────────────────────────────────────────────
 
   /**
-   * Run a shell command in the given working directory.
+   * Scaffold from a structure block (no source).
+   * Subclasses override this; default emits an 'info' and does nothing.
    */
+  protected async *handleStructure(
+    config: KilnConfig,
+    vars: Record<string, string>,
+    outputDir: string
+  ): AsyncGenerator<ScaffoldEvent> {
+    yield { status: 'info', message: `Runtime "${this.name}" does not support structure-based scaffolding` };
+  }
+
+  /**
+   * Optional extra validation. Return [] if nothing extra to check.
+   */
+  validateConfig(_config: KilnConfig): Diagnostic[] {
+    return [];
+  }
+
+  // ── Top-level scaffold generator ─────────────────────────────────────────────
+
+  async *scaffold(opts: ScaffoldOptions): AsyncGenerator<ScaffoldEvent> {
+    const { config, configDir, variables: vars, outputDir } = opts;
+
+    // 1. Source (command / github / local)
+    if (config.source) {
+      switch (config.source.type) {
+        case 'command':
+          yield* this.handleCommandSource(config.source, vars, outputDir);
+          break;
+        case 'github':
+          yield* this.handleGithubSource(config.source, vars, outputDir);
+          break;
+        case 'local':
+          yield* this.handleLocalSource(config.source, vars, outputDir, configDir);
+          break;
+        default:
+          yield { status: 'info', message: `Source type "${(config.source as any).type}" not yet supported` };
+      }
+    } else if (config.structure) {
+      // 2. Structure-based (runtime-specific)
+      yield* this.handleStructure(config, vars, outputDir);
+    }
+
+    // 3. post_init
+    for (const step of config.post_init ?? []) {
+      const cmd = this.interpolate(step.cmd, vars);
+      const label = step.label ? this.interpolate(step.label, vars) : cmd;
+      yield { status: 'running', message: label };
+      const code = await this.runCommand(cmd, outputDir);
+      if (code !== 0) {
+        yield { status: 'error', message: `post_init failed (exit ${code}): ${cmd}` };
+      } else {
+        yield { status: 'ok', message: label };
+      }
+    }
+
+    // 4. git init + commit
+    try {
+      yield { status: 'running', message: 'Initialising git repository' };
+      await this.gitInit(outputDir);
+      await this.gitCommit(outputDir);
+      yield { status: 'ok', message: 'Git repository initialised' };
+    } catch (err: unknown) {
+      yield { status: 'warning', message: `git init skipped: ${(err as Error).message}` };
+    }
+
+    yield { status: 'info', message: `Done! Project created in ${outputDir}` };
+  }
+
+  // ── Shell runner ─────────────────────────────────────────────────────────────
+
   protected async runCommand(cmd: string, cwd: string): Promise<number> {
     const shell: string | true = process.platform === 'win32' ? true : '/bin/sh';
     const child = execa(cmd, { cwd, shell, stdio: 'inherit' });
@@ -38,17 +104,13 @@ export abstract class BaseRuntimeEngine {
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────────────────
-  // Template interpolation  {{variable}}
-  // ──────────────────────────────────────────────────────────────────────────────
+  // ── Interpolation ────────────────────────────────────────────────────────────
 
   protected interpolate(str: string, vars: Record<string, string>): string {
     return str.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key: string) => vars[key] ?? _);
   }
 
-  // ──────────────────────────────────────────────────────────────────────────────
-  // Git helpers
-  // ──────────────────────────────────────────────────────────────────────────────
+  // ── Git ──────────────────────────────────────────────────────────────────────
 
   protected async gitInit(cwd: string): Promise<void> {
     await execa('git', ['init'], { cwd, stdio: 'pipe' });
@@ -59,21 +121,18 @@ export abstract class BaseRuntimeEngine {
     try {
       await execa('git', ['commit', '-m', message], { cwd, stdio: 'pipe' });
     } catch {
-      // may fail if nothing to commit
+      // nothing to commit — that's fine
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────────────────
-  // Source handlers
-  // ──────────────────────────────────────────────────────────────────────────────
+  // ── Source handlers ───────────────────────────────────────────────────────────
 
   protected async *handleCommandSource(
     source: ConfigSource,
     vars: Record<string, string>,
     outputDir: string
   ): AsyncGenerator<ScaffoldEvent> {
-    const commands = source.commands ?? [];
-    for (const step of commands) {
+    for (const step of source.commands ?? []) {
       const cmd = this.interpolate(step.cmd, vars);
       const label = step.label ? this.interpolate(step.label, vars) : cmd;
       yield { status: 'running', message: label };
@@ -103,9 +162,23 @@ export abstract class BaseRuntimeEngine {
     yield { status: 'ok', message: `Cloned ${repo}` };
   }
 
-  // ──────────────────────────────────────────────────────────────────────────────
-  // File utilities
-  // ──────────────────────────────────────────────────────────────────────────────
+  protected async *handleLocalSource(
+    source: ConfigSource,
+    vars: Record<string, string>,
+    outputDir: string,
+    configDir: string
+  ): AsyncGenerator<ScaffoldEvent> {
+    const srcPath = source.path
+      ? path.resolve(configDir, this.interpolate(source.path, vars))
+      : configDir;
+    yield { status: 'running', message: `Copying from ${srcPath}` };
+    try {
+      this.copyDir(srcPath, outputDir, vars);
+      yield { status: 'ok', message: 'Files copied' };
+    } catch (err: unknown) {
+      yield { status: 'error', message: `Copy failed: ${(err as Error).message}` };
+    }
+  }
 
   protected copyDir(src: string, dest: string, vars: Record<string, string>): void {
     fs.mkdirSync(dest, { recursive: true });

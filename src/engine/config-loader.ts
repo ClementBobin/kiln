@@ -15,11 +15,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
-// @ts-expect-error — ajv ships as CJS; default export is the class under ESM interop
-import AjvCtor from 'ajv';
-// @ts-expect-error — ajv-formats ships as CJS
-import addFormats from 'ajv-formats';
-import type Ajv from 'ajv';
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const AjvModule = require('ajv');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const addFormatsModule = require('ajv-formats');
+// AJV v8 ships as CJS; the default export under require() is the class itself.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const AjvClass = (AjvModule as any).default ?? AjvModule;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const addFormats = (addFormatsModule as any).default ?? addFormatsModule;
 import { configSchema } from './schema.js';
 import type { Diagnostic, LoadConfigResult } from '../../types/index.js';
 import type { TreeNode } from '../../types/index.js';
@@ -28,8 +34,9 @@ import type { KilnConfig } from '../../types/index.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BUILTIN_CONFIGS = path.resolve(__dirname, '../../configs');
 
-const ajv = new (AjvCtor as typeof Ajv)({ allErrors: true, strict: false });
-(addFormats as (instance: Ajv) => void)(ajv);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ajv = new AjvClass({ allErrors: true, strict: false }) as any;
+addFormats(ajv);
 const _validate = ajv.compile(configSchema);
 
 // ──────────────────────────────────────────────────────────────────────────────
