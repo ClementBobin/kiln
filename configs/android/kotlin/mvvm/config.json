@@ -1,5 +1,6 @@
 {
   "name": "Android — Kotlin MVVM",
+  "tags": ["android", "kotlin", "mvvm", "jetpack-compose", "hilt", "retrofit", "room"],
   "description": "Android application with MVVM architecture, Jetpack Compose UI, Hilt dependency injection, Retrofit for networking, and Room for local persistence.",
 
   "structure": {
@@ -20,13 +21,6 @@
       ]
     }
   },
-
-  "variables": [
-    { "key": "package_name",   "label": "Package name (reverse domain)", "default": "com.example.myapp" },
-    { "key": "min_sdk",        "label": "Minimum SDK",          "choices": ["26", "28", "30", "33"], "default": "28" },
-    { "key": "target_sdk",     "label": "Target SDK",           "choices": ["34", "35"],             "default": "34" },
-    { "key": "kotlin_version", "label": "Kotlin version",       "choices": ["1.9", "2.0"],           "default": "2.0" }
-  ],
 
   "code_conventions": {
     "editorconfig": true,

@@ -35,6 +35,7 @@ function inferRuntime(config: KilnConfig): RuntimeName {
 
   // 2. Tag-based
   if (tags.some((t) => ['dotnet', 'aspnet', 'csharp', '.net'].includes(t.toLowerCase()))) return 'dotnet';
+  if (tags.some((t) => ['node', 'javascript', 'typescript'].includes(t.toLowerCase()))) return 'node';
   if (tags.some((t) => ['android', 'kotlin'].includes(t.toLowerCase()))) return 'kotlin';
 
   // 3. Structure-only configs: if structure keys look like C# project names → dotnet
