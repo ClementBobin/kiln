@@ -13,9 +13,7 @@
   },
 
   "structure": {
-    "src": {
-      "templates": ["react_structure"]
-    }
+    "templates": ["react_structure"]
   },
 
   "variables": [
