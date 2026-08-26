@@ -12,7 +12,7 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import { BaseRuntimeEngine } from './base.runtime.js';
-import type { ScaffoldEvent, ScaffoldOptions, KilnConfig } from '../../../types/index.js';
+import type { ScaffoldEvent, KilnConfig, CommandStep } from '../../../types/index.js';
 
 /** Shape of one entry in config.structure for .NET projects */
 interface DotNetProjectConfig {
@@ -36,6 +36,22 @@ function dotnetTemplate(type: string | undefined, lib?: string): string {
 
 export class DotNetRuntimeEngine extends BaseRuntimeEngine {
   name = 'dotnet';
+
+  // ── Default lifecycle steps ───────────────────────────────────────────────
+
+  protected get defaultCheckDependencies(): CommandStep[] {
+    return [
+      { cmd: 'dotnet --version', label: 'Check .NET CLI' },
+    ];
+  }
+
+  protected get defaultPostInit(): CommandStep[] {
+    return [
+      { cmd: 'dotnet restore {{project_name}}/{{project_name}}.sln', label: 'Restoring NuGet packages' },
+    ];
+  }
+
+  // ── Structure handler ─────────────────────────────────────────────────────
 
   protected async *handleStructure(
     config: KilnConfig,
@@ -138,10 +154,5 @@ export class DotNetRuntimeEngine extends BaseRuntimeEngine {
       }
     }
     yield { status: 'ok', message: 'All project references wired' };
-
-    // ── 4. Restore ───────────────────────────────────────────────────────────
-    yield { status: 'running', message: 'Restoring NuGet packages' };
-    await this.runCommand(`dotnet restore ${projectName}.sln`, solutionRoot);
-    yield { status: 'ok', message: 'NuGet packages restored' };
   }
 }

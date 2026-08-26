@@ -1,9 +1,45 @@
 /**
+ * schema.ts
+ *
  * JSON Schema for kiln config.json files.
- * Used to validate user-provided configs and emit typed warnings/errors.
+ * Used by AJV at load-time to emit typed diagnostics.
  */
 
 import type { SchemaObject } from 'ajv';
+
+/** Reusable schema fragment for a CommandStep array (or null to disable). */
+const commandStepList: SchemaObject = {
+  oneOf: [
+    {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['cmd'],
+        additionalProperties: false,
+        properties: {
+          cmd:      { type: 'string', minLength: 1 },
+          label:    { type: 'string' },
+          override: { type: 'boolean' },
+        },
+      },
+    },
+    { type: 'null' },
+  ],
+};
+
+/** Source command list — same shape but override is meaningless here (always additive). */
+const sourceCommandList: SchemaObject = {
+  type: 'array',
+  items: {
+    type: 'object',
+    required: ['cmd'],
+    additionalProperties: false,
+    properties: {
+      cmd:   { type: 'string', minLength: 1 },
+      label: { type: 'string' },
+    },
+  },
+};
 
 export const configSchema: SchemaObject = {
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -15,73 +51,97 @@ export const configSchema: SchemaObject = {
   ],
   additionalProperties: true,
   properties: {
+
     name: {
       type: 'string',
       minLength: 1,
-      description: 'Display name for this config',
+      description: 'Display name shown in the picker',
     },
+
     description: {
       type: 'string',
       description: 'Short description shown in the picker',
     },
-    version: {
-      type: 'string',
-      pattern: '^\\d+\\.\\d+\\.\\d+$',
-      description: 'Semantic version, e.g. "1.0.0"',
-    },
+
     tags: {
       type: 'array',
       items: { type: 'string' },
-      description: 'Tags for filtering/search',
+      description: 'Tags used for runtime inference and filtering',
     },
+
     runtime: {
       type: 'string',
       enum: ['node', 'dotnet', 'kotlin', 'android'],
-      description: 'Runtime engine to use. Inferred when absent.',
+      description: 'Runtime engine. Inferred from tags/structure when absent.',
     },
+
+    // ── Lifecycle hooks ──────────────────────────────────────────────────────
+
+    check_dependencies: {
+      ...commandStepList,
+      description:
+        'Commands that verify required tools are present (should exit 0 when the tool exists). ' +
+        'null = skip all checks (including runtime defaults). ' +
+        'Steps with override:true replace runtime defaults; others append after them.',
+    },
+
+    pre_init: {
+      ...commandStepList,
+      description:
+        'Commands that run before scaffolding. ' +
+        'null = skip (including runtime defaults). ' +
+        'Steps with override:true replace runtime defaults; others append after them.',
+    },
+
+    post_init: {
+      ...commandStepList,
+      description:
+        'Commands that run after scaffolding (restore, install, format…). ' +
+        'null = skip (including runtime defaults). ' +
+        'Steps with override:true replace runtime defaults; others append after them.',
+    },
+
+    // ── Source ───────────────────────────────────────────────────────────────
+
     source: {
       type: 'object',
       required: ['type'],
-      description: 'How the project is created',
+      description: 'How the project skeleton is created',
       properties: {
         type: {
           type: 'string',
           enum: ['command', 'local', 'github', 'script'],
-          description: 'Source strategy: "command" | "local" | "github" | "script"',
         },
-        commands: {
-          type: 'array',
-          items: {
-            type: 'object',
-            required: ['cmd'],
-            properties: {
-              cmd: { type: 'string' },
-              label: { type: 'string' },
-            },
-          },
-        },
-        repo: { type: 'string' },
-        ref: { type: 'string' },
-        path: { type: 'string' },
+        commands: sourceCommandList,
+        repo:     { type: 'string' },
+        ref:      { type: 'string' },
+        path:     { type: 'string' },
       },
     },
+
+    structure: {
+      description: 'Project structure map (runtime-specific shape)',
+    },
+
+    // ── Variables ────────────────────────────────────────────────────────────
+
     variables: {
       type: 'array',
       items: {
         type: 'object',
         required: ['key'],
         properties: {
-          key: { type: 'string', minLength: 1 },
-          label: { type: 'string' },
-          default: { type: 'string' },
-          choices: {
-            type: 'array',
-            items: { type: 'string' },
-          },
+          key:      { type: 'string', minLength: 1 },
+          label:    { type: 'string' },
+          default:  { type: 'string' },
+          choices:  { type: 'array', items: { type: 'string' } },
           required: { type: 'boolean' },
         },
       },
     },
+
+    // ── Code conventions ─────────────────────────────────────────────────────
+
     code_conventions: {
       type: 'object',
       properties: {
@@ -89,7 +149,7 @@ export const configSchema: SchemaObject = {
         linter: {
           type: 'object',
           properties: {
-            enabled: { type: 'boolean' },
+            enabled:     { type: 'boolean' },
             type: {
               type: 'string',
               enum: ['eslint', 'biome', 'oxc', 'pylint', 'ruff', 'ktlint', 'detekt', 'swiftlint', 'roslyn'],
@@ -110,57 +170,18 @@ export const configSchema: SchemaObject = {
         commit_conventions: {
           type: 'object',
           properties: {
-            enabled: { type: 'boolean' },
-            tool: { type: 'string' },
+            enabled:     { type: 'boolean' },
+            tool:        { type: 'string' },
             config_file: { type: 'string' },
-            hooks: { type: 'string' },
+            hooks:       { type: 'string' },
           },
         },
       },
     },
-    docker: {
-      type: 'object',
-      properties: {
-        target_stage: { type: 'string' },
-      },
-    },
-    cicd: {
-      type: 'object',
-      properties: {
-        workflows: {
-          type: 'array',
-          items: { type: 'string' },
-        },
-      },
-    },
-    pipeline: {
-      type: 'array',
-      items: {
-        type: 'string',
-        enum: ['build', 'test', 'format'],
-      },
-    },
-    post_init: {
-      type: 'array',
-      items: {
-        type: 'object',
-        required: ['cmd'],
-        properties: {
-          cmd: { type: 'string' },
-          label: { type: 'string' },
-        },
-      },
-    },
-    structure: {
-      description: 'Directory/template structure (flexible shape)',
-    },
-    templates: {
-      type: 'array',
-      items: { type: 'string' },
-    },
+
     plugins: {
       type: 'array',
       items: { type: 'string' },
     },
   },
-};
+}

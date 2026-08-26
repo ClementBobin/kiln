@@ -11,18 +11,20 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { BaseRuntimeEngine } from './base.runtime.js';
-import type { ScaffoldEvent, KilnConfig } from '../../../types/index.js';
-
-/** Flatten the structure's folder list into simple string names */
-function flattenFolders(folders: (string | Record<string, unknown>)[]): string[] {
-  return folders.flatMap((f) => {
-    if (typeof f === 'string') return [f];
-    return Object.keys(f);
-  });
-}
+import type { ScaffoldEvent, KilnConfig, CommandStep } from '../../../types/index.js';
 
 export class KotlinRuntimeEngine extends BaseRuntimeEngine {
   name = 'kotlin';
+
+  // ── Default lifecycle steps ───────────────────────────────────────────────
+
+  protected get defaultCheckDependencies(): CommandStep[] {
+    return [
+      { cmd: 'javac -version', label: 'Check Java compiler' },
+    ];
+  }
+
+  // ── Structure handler ─────────────────────────────────────────────────────
 
   protected async *handleStructure(
     config: KilnConfig,
@@ -58,7 +60,7 @@ export class KotlinRuntimeEngine extends BaseRuntimeEngine {
 
       if (details && typeof details === 'object' && !Array.isArray(details)) {
         const folderList: (string | Record<string, unknown>)[] = details.folders ?? [];
-        const subFolders = flattenFolders(folderList);
+        const subFolders = this.flattenFolders(folderList);
 
         if (subFolders.length) {
           for (const sub of subFolders) {
