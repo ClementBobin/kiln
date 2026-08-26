@@ -12,13 +12,11 @@
     ]
   },
 
-  "structure": [
-    {"src": {
+  "structure": {
+    "src": {
       "templates": ["react_structure"]
-    }},
-    "api",
-    "pages"
-  ],
+    }
+  },
 
   "variables": [
     { "key": "project_name", "label": "Project name",      "default": "my-app" },
