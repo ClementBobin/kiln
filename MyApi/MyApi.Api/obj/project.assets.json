@@ -1,0 +1,286 @@
+{
+  "version": 3,
+  "targets": {
+    "net9.0": {
+      "Microsoft.AspNetCore.OpenApi/9.0.9": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.OpenApi": "1.6.17"
+        },
+        "compile": {
+          "lib/net9.0/Microsoft.AspNetCore.OpenApi.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.AspNetCore.OpenApi.dll": {
+            "related": ".xml"
+          }
+        },
+        "frameworkReferences": [
+          "Microsoft.AspNetCore.App"
+        ]
+      },
+      "Microsoft.OpenApi/1.6.17": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/Microsoft.OpenApi.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.OpenApi.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "MyApi.Business/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "MyApi.Business.Contracts": "1.0.0",
+          "MyApi.Entity": "1.0.0",
+          "MyApi.Repository.Contracts": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/MyApi.Business.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/MyApi.Business.dll": {}
+        }
+      },
+      "MyApi.Business.Contracts/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "MyApi.Entity": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/MyApi.Business.Contracts.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/MyApi.Business.Contracts.dll": {}
+        }
+      },
+      "MyApi.EntitiesContext/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "MyApi.Entity": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/MyApi.EntitiesContext.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/MyApi.EntitiesContext.dll": {}
+        }
+      },
+      "MyApi.Entity/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "compile": {
+          "bin/placeholder/MyApi.Entity.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/MyApi.Entity.dll": {}
+        }
+      },
+      "MyApi.Repository/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "MyApi.EntitiesContext": "1.0.0",
+          "MyApi.Entity": "1.0.0",
+          "MyApi.Repository.Contracts": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/MyApi.Repository.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/MyApi.Repository.dll": {}
+        }
+      },
+      "MyApi.Repository.Contracts/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "MyApi.Entity": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/MyApi.Repository.Contracts.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/MyApi.Repository.Contracts.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Microsoft.AspNetCore.OpenApi/9.0.9": {
+      "sha512": "3Sina0gS/CTYt9XG6DUFPdXOmJui7e551U0kO2bIiDk3vZ2sctxxenN+cE1a5CrUpjIVZfZr32neWYYRO+Piaw==",
+      "type": "package",
+      "path": "microsoft.aspnetcore.openapi/9.0.9",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/net9.0/Microsoft.AspNetCore.OpenApi.dll",
+        "lib/net9.0/Microsoft.AspNetCore.OpenApi.xml",
+        "microsoft.aspnetcore.openapi.9.0.9.nupkg.sha512",
+        "microsoft.aspnetcore.openapi.nuspec"
+      ]
+    },
+    "Microsoft.OpenApi/1.6.17": {
+      "sha512": "Le+kehlmrlQfuDFUt1zZ2dVwrhFQtKREdKBo+rexOwaCoYP0/qpgT9tLxCsZjsgR5Itk1UKPcbgO+FyaNid/bA==",
+      "type": "package",
+      "path": "microsoft.openapi/1.6.17",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/netstandard2.0/Microsoft.OpenApi.dll",
+        "lib/netstandard2.0/Microsoft.OpenApi.pdb",
+        "lib/netstandard2.0/Microsoft.OpenApi.xml",
+        "microsoft.openapi.1.6.17.nupkg.sha512",
+        "microsoft.openapi.nuspec"
+      ]
+    },
+    "MyApi.Business/1.0.0": {
+      "type": "project",
+      "path": "../MyApi.Business/MyApi.Business.csproj",
+      "msbuildProject": "../MyApi.Business/MyApi.Business.csproj"
+    },
+    "MyApi.Business.Contracts/1.0.0": {
+      "type": "project",
+      "path": "../MyApi.Business.Contracts/MyApi.Business.Contracts.csproj",
+      "msbuildProject": "../MyApi.Business.Contracts/MyApi.Business.Contracts.csproj"
+    },
+    "MyApi.EntitiesContext/1.0.0": {
+      "type": "project",
+      "path": "../MyApi.EntitiesContext/MyApi.EntitiesContext.csproj",
+      "msbuildProject": "../MyApi.EntitiesContext/MyApi.EntitiesContext.csproj"
+    },
+    "MyApi.Entity/1.0.0": {
+      "type": "project",
+      "path": "../MyApi.Entity/MyApi.Entity.csproj",
+      "msbuildProject": "../MyApi.Entity/MyApi.Entity.csproj"
+    },
+    "MyApi.Repository/1.0.0": {
+      "type": "project",
+      "path": "../MyApi.Repository/MyApi.Repository.csproj",
+      "msbuildProject": "../MyApi.Repository/MyApi.Repository.csproj"
+    },
+    "MyApi.Repository.Contracts/1.0.0": {
+      "type": "project",
+      "path": "../MyApi.Repository.Contracts/MyApi.Repository.Contracts.csproj",
+      "msbuildProject": "../MyApi.Repository.Contracts/MyApi.Repository.Contracts.csproj"
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net9.0": [
+      "Microsoft.AspNetCore.OpenApi >= 9.0.9",
+      "MyApi.Business >= 1.0.0",
+      "MyApi.Business.Contracts >= 1.0.0",
+      "MyApi.Entity >= 1.0.0",
+      "MyApi.Repository >= 1.0.0",
+      "MyApi.Repository.Contracts >= 1.0.0"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\clement.bobin\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Api\\MyApi.Api.csproj",
+      "projectName": "MyApi.Api",
+      "projectPath": "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Api\\MyApi.Api.csproj",
+      "packagesPath": "C:\\Users\\clement.bobin\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Api\\obj\\",
+      "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
+      "configFilePaths": [
+        "C:\\Users\\clement.bobin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net9.0"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "projectReferences": {
+            "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Business.Contracts\\MyApi.Business.Contracts.csproj": {
+              "projectPath": "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Business.Contracts\\MyApi.Business.Contracts.csproj"
+            },
+            "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Business\\MyApi.Business.csproj": {
+              "projectPath": "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Business\\MyApi.Business.csproj"
+            },
+            "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Entity\\MyApi.Entity.csproj": {
+              "projectPath": "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Entity\\MyApi.Entity.csproj"
+            },
+            "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Repository.Contracts\\MyApi.Repository.Contracts.csproj": {
+              "projectPath": "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Repository.Contracts\\MyApi.Repository.Contracts.csproj"
+            },
+            "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Repository\\MyApi.Repository.csproj": {
+              "projectPath": "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Repository\\MyApi.Repository.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "9.0.300"
+    },
+    "frameworks": {
+      "net9.0": {
+        "targetAlias": "net9.0",
+        "dependencies": {
+          "Microsoft.AspNetCore.OpenApi": {
+            "target": "Package",
+            "version": "[9.0.9, )"
+          }
+        },
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.AspNetCore.App": {
+            "privateAssets": "none"
+          },
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}
