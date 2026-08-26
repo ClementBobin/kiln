@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Api\\MyApi.Api.csproj": {}
+    "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Application.Tests\\MyApi.Application.Tests.csproj": {}
   },
   "projects": {
-    "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Api\\MyApi.Api.csproj": {
+    "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Application.Tests\\MyApi.Application.Tests.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Api\\MyApi.Api.csproj",
-        "projectName": "MyApi.Api",
-        "projectPath": "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Api\\MyApi.Api.csproj",
+        "projectUniqueName": "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Application.Tests\\MyApi.Application.Tests.csproj",
+        "projectName": "MyApi.Application.Tests",
+        "projectPath": "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Application.Tests\\MyApi.Application.Tests.csproj",
         "packagesPath": "C:\\Users\\clement.bobin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Api\\obj\\",
+        "outputPath": "C:\\Users\\clement.bobin\\Documents\\kiln\\MyApi\\MyApi.Application.Tests\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -61,9 +61,21 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
-            "Microsoft.AspNetCore.OpenApi": {
+            "Microsoft.NET.Test.Sdk": {
               "target": "Package",
-              "version": "[9.0.9, )"
+              "version": "[17.12.0, )"
+            },
+            "coverlet.collector": {
+              "target": "Package",
+              "version": "[6.0.2, )"
+            },
+            "xunit": {
+              "target": "Package",
+              "version": "[2.9.2, )"
+            },
+            "xunit.runner.visualstudio": {
+              "target": "Package",
+              "version": "[2.8.2, )"
             }
           },
           "imports": [
@@ -78,9 +90,6 @@
           "assetTargetFallback": true,
           "warn": true,
           "frameworkReferences": {
-            "Microsoft.AspNetCore.App": {
-              "privateAssets": "none"
-            },
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }

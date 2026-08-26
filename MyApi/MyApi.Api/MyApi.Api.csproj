@@ -11,11 +11,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MyApi.Business\MyApi.Business.csproj" />
-    <ProjectReference Include="..\MyApi.Business.Contracts\MyApi.Business.Contracts.csproj" />
-    <ProjectReference Include="..\MyApi.Repository\MyApi.Repository.csproj" />
-    <ProjectReference Include="..\MyApi.Repository.Contracts\MyApi.Repository.Contracts.csproj" />
-    <ProjectReference Include="..\MyApi.Entity\MyApi.Entity.csproj" />
+    <ProjectReference Include="..\MyApi.Application\MyApi.Application.csproj" />
+    <ProjectReference Include="..\MyApi.Domain\MyApi.Domain.csproj" />
+    <ProjectReference Include="..\MyApi.Infrastructure\MyApi.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
