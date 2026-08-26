@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyApiTest.Business.Contracts\MyApiTest.Business.Contracts.csproj" />
+    <ProjectReference Include="..\MyApiTest.Entity\MyApiTest.Entity.csproj" />
+    <ProjectReference Include="..\MyApiTest.Repository.Contracts\MyApiTest.Repository.Contracts.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

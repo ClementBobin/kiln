@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyApiTest.Business\MyApiTest.Business.csproj" />
+    <ProjectReference Include="..\MyApiTest.Business.Contracts\MyApiTest.Business.Contracts.csproj" />
+    <ProjectReference Include="..\MyApiTest.Repository\MyApiTest.Repository.csproj" />
+    <ProjectReference Include="..\MyApiTest.Repository.Contracts\MyApiTest.Repository.Contracts.csproj" />
+    <ProjectReference Include="..\MyApiTest.Entity\MyApiTest.Entity.csproj" />
+  </ItemGroup>
+
+</Project>
