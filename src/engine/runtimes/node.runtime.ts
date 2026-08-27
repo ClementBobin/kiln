@@ -9,20 +9,23 @@
  *
  *   "structure": {
  *     "templates": ["react_structure"],   ← root-level templates → copied to project root
- *     "src": {                            ← custom source layer
- *       "folders": ["api", "pages"],
- *       "templates": ["my_src_tpl"]       ← layer templates → copied into src/
+ *     "app": {                            ← directory created at project root
+ *       "folders": ["api"]               ← sub-directory: app/api/
  *     },
- *     "app": {
- *       "folders": ["api"]
+ *     "components": {
+ *       "templates": ["my_components"]    ← template copied into components/
  *     }
  *   }
  *
- * After a command source runs (e.g. `npm create vite@latest`), the structure
- * block is used to:
+ * Layer keys are real directory names relative to the project root — NOT
+ * nested inside a hardcoded "src/" prefix. This matches how Next.js, Vite,
+ * and other CLI generators lay out their projects (app/, src/, components/…).
+ *
+ * After a command source runs (e.g. `npx create-next-app@latest`), the
+ * structure block is used to:
  *   1. Apply root-level templates into the newly created project directory.
- *   2. Create any declared custom layers / folders.
- *   3. Apply per-layer templates into that layer's directory.
+ *   2. Create any declared directories and sub-directories.
+ *   3. Apply per-layer / per-folder templates.
  */
 
 import fs from 'node:fs';
@@ -35,8 +38,8 @@ import type { FolderConfig } from '../../../types/index.js';
 
 /**
  * Resolve the project root inside outputDir after a command like
- * `npm create vite@latest {{project_name}}` which creates a sub-directory.
- * Falls back to outputDir if the sub-directory doesn't exist.
+ * `npx create-next-app@latest {{project_name}}` which creates a sub-directory.
+ * Falls back to outputDir itself if no matching sub-directory exists.
  */
 function resolveProjectRoot(outputDir: string, projectName?: string): string {
   if (projectName) {
@@ -68,38 +71,22 @@ export class NodeRuntimeEngine extends BaseRuntimeEngine {
     ];
   }
 
-  // ── Source handler override ──────────────────────────────────────────────
+  // ── Top-level scaffold override ──────────────────────────────────────────
   //
-  // After command-source scaffolding completes, we still process the
-  // structure block (if present) to apply templates and extra folders.
+  // When a config has BOTH source AND structure, the base scaffold() runs
+  // the source commands first (which create the project directory), then we
+  // apply the structure block on top of the generated project root.
 
-  protected async *handleCommandSource(
-    source: Parameters<BaseRuntimeEngine['handleCommandSource']>[0],
-    vars: Record<string, string>,
-    outputDir: string,
-  ): AsyncGenerator<ScaffoldEvent> {
-    // Run the commands (e.g. npm create vite@latest)
-    yield* super.handleCommandSource(source, vars, outputDir);
-
-    // Now apply structure on top of the generated project
-    const config = { structure: undefined } as unknown as KilnConfig;
-    // We need the real config — handled in scaffold() via handleStructureBlock
-    // This is called from scaffold() which has the full config. We delegate to
-    // a separate method that callers of scaffold() trigger explicitly by
-    // overriding the top-level scaffold() in this class.
-  }
-
-  // Override top-level scaffold() to run structureBlock after source
   async *scaffold(
     opts: Parameters<BaseRuntimeEngine['scaffold']>[0],
   ): AsyncGenerator<ScaffoldEvent> {
     const { config, variables: vars, outputDir } = opts;
 
-    // Run the full base lifecycle (checks → pre → source → post → git)
+    // Full base lifecycle: checks → pre → source → post → git
     yield* super.scaffold(opts);
 
-    // After source ran, apply the structure block (templates + extra folders)
-    // into the actual project root (which may be outputDir/<project_name>/)
+    // After source ran, apply structure (templates + directories) into the
+    // actual project root, which may be outputDir/<project_name>/
     if (config.source && config.structure) {
       const projectRoot = resolveProjectRoot(outputDir, vars['project_name']);
       yield* this.applyStructureBlock(config, vars, projectRoot);
@@ -118,7 +105,7 @@ export class NodeRuntimeEngine extends BaseRuntimeEngine {
 
     fs.mkdirSync(outputDir, { recursive: true });
 
-    // Default directories for pure-structure configs (no source command)
+    // Create default src/ and test/ directories for pure-structure configs
     for (const d of ['src', 'test']) {
       const dir = path.join(outputDir, d);
       fs.mkdirSync(dir, { recursive: true });
@@ -139,11 +126,14 @@ export class NodeRuntimeEngine extends BaseRuntimeEngine {
 
   /**
    * Processes a config's structure block:
-   *   1. Root-level templates (structure.templates) → destDir
-   *   2. Per-layer directories + per-layer templates
+   *   1. Root-level templates (structure.templates) → written into destDir
+   *   2. Per-layer directories (keys other than "templates") → created inside destDir
+   *      • sub-folders listed in .folders[] → created inside the layer dir
+   *      • .templates[] on a layer → applied into the layer dir
+   *      • per-folder .templates inside object entries → applied into that sub-dir
    *
-   * Works the same whether triggered from a source+structure config or a
-   * structure-only config.
+   * Layer keys map directly to directories inside destDir — there is NO implicit
+   * "src/" prefix. "app" → destDir/app/, "components" → destDir/components/, etc.
    */
   private async *applyStructureBlock(
     config: KilnConfig,
@@ -160,30 +150,32 @@ export class NodeRuntimeEngine extends BaseRuntimeEngine {
       yield* this.applyTemplates(rootTemplates, destDir, vars);
     }
 
-    // 2. Per-layer entries ─────────────────────────────────────────────────
+    // 2. Per-layer directory entries ───────────────────────────────────────
     for (const [layerName, details] of Object.entries(structure)) {
-      if (layerName === 'templates') continue; // already handled above
+      if (layerName === 'templates') continue; // handled above
+
+      // Skip non-object values (bare strings, numbers, booleans used as metadata)
+      if (!details || typeof details !== 'object' || Array.isArray(details)) continue;
 
       const layerDetails = details as {
         folders?: (string | Record<string, FolderConfig>)[];
         templates?: string[];
-      } | null | undefined;
+      };
 
-      if (!layerDetails || typeof layerDetails !== 'object') continue;
-
-      const layerDir = path.join(destDir, 'src', layerName.toLowerCase());
+      // Directories are created relative to destDir (the project root), not src/
+      const layerDir = path.join(destDir, layerName);
       fs.mkdirSync(layerDir, { recursive: true });
 
-      // 2a. Sub-folders with optional per-folder templates
+      // 2a. Sub-folders
       const folderEntries = layerDetails.folders ?? [];
       for (const entry of folderEntries) {
         if (typeof entry === 'string') {
-          // Plain string → just create the directory
+          // Plain string → create the sub-directory
           const subDir = path.join(layerDir, entry);
           fs.mkdirSync(subDir, { recursive: true });
           fs.writeFileSync(path.join(subDir, '.gitkeep'), '');
         } else {
-          // Object → { folderName: { templates?: [...] } }
+          // Object entry → { folderName: { templates?: [...] } }
           for (const [folderName, folderCfg] of Object.entries(entry)) {
             const subDir = path.join(layerDir, folderName);
             fs.mkdirSync(subDir, { recursive: true });
@@ -198,16 +190,16 @@ export class NodeRuntimeEngine extends BaseRuntimeEngine {
         }
       }
 
-      // 2b. Layer-level templates (copied into the layer directory)
+      // 2b. Layer-level templates (written into the layer dir itself)
       const layerTemplates = layerDetails.templates ?? [];
       if (layerTemplates.length) {
         yield* this.applyTemplates(layerTemplates, layerDir, vars);
       } else if (!folderEntries.length) {
-        // Empty layer — drop a .gitkeep so git tracks the dir
+        // No sub-folders, no templates → at least keep the dir tracked
         fs.writeFileSync(path.join(layerDir, '.gitkeep'), '');
       }
 
-      yield { status: 'ok', message: `Layer ready: src/${layerName.toLowerCase()}/` };
+      yield { status: 'ok', message: `Directory ready: ${layerName}/` };
     }
   }
 }
