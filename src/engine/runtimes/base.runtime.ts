@@ -8,6 +8,7 @@
  *   1. check_dependencies  — verify required tools exist (exit 0 = present)
  *   2. pre_init            — environment / directory setup
  *   3. source / structure  — actual scaffolding
+ *      └─ applyTemplates() is called by subclasses wherever templates fit
  *   4. post_init           — restore / install / format
  *   5. git init + commit
  *
@@ -16,13 +17,20 @@
  * Each runtime defines its own default steps (protected getters that subclasses
  * may override).  The config author can then:
  *
- *   • Omit the field (or use `[]`)  → runtime defaults run as-is.
- *   • Set the field to `null`        → skip everything (no defaults, no user steps).
- *   • Provide steps without override → user steps are APPENDED after the defaults.
+ *   • Omit the field (or use `[]`)   → runtime defaults run as-is.
+ *   • Set the field to `null`         → skip everything (no defaults, no user steps).
+ *   • Provide steps without override  → user steps are APPENDED after the defaults.
  *   • Provide steps with override:true → those steps REPLACE the defaults entirely;
  *                                        remaining non-override steps still append.
  *
  * The helper `mergeSteps(defaults, configured)` implements this logic.
+ *
+ * Template application
+ * ────────────────────
+ * `applyTemplates(names, destDir, vars, templateRoots?)` resolves each
+ * template name to its directory in templates/ and copies all files into
+ * `destDir` with {{ var }} interpolation.  It yields ScaffoldEvents so
+ * subclasses can call it with `yield*`.
  */
 
 import fs from 'node:fs';
@@ -32,6 +40,11 @@ import type { ScaffoldEvent, ScaffoldOptions } from '../../../types/index.js';
 import type { CommandStep, ConfigSource, KilnConfig } from '../../../types/index.js';
 import type { Diagnostic } from '../../../types/index.js';
 import process from 'node:process';
+import {
+  resolveTemplates,
+  applyTemplate,
+  BUILTIN_TEMPLATES_DIR,
+} from '../template-loader.js';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Step-merge logic
@@ -120,6 +133,52 @@ export abstract class BaseRuntimeEngine {
   /** Optional extra config validation. Return [] if nothing to check. */
   validateConfig(_config: KilnConfig): Diagnostic[] {
     return [];
+  }
+
+  // ── Template application ──────────────────────────────────────────────────
+
+  /**
+   * Resolve and apply a list of template names into `destDir`.
+   *
+   * Yields `ScaffoldEvent`s so subclasses can delegate with `yield*`:
+   *
+   *   yield* this.applyTemplates(['react_structure'], outputDir, vars);
+   *
+   * @param names        - template names as written in the config
+   * @param destDir      - absolute directory to write files into
+   * @param vars         - interpolation variables
+   * @param extraRoots   - additional template search roots (config-local)
+   */
+  protected async *applyTemplates(
+    names: string[],
+    destDir: string,
+    vars: Record<string, string>,
+    extraRoots: string[] = [],
+  ): AsyncGenerator<ScaffoldEvent> {
+    if (!names.length) return;
+
+    const roots = [BUILTIN_TEMPLATES_DIR, ...extraRoots];
+    const { resolved, missing } = resolveTemplates(names, roots);
+
+    for (const name of missing) {
+      yield { status: 'warning', message: `Template "${name}" not found — skipped` };
+    }
+
+    for (const template of resolved) {
+      yield { status: 'running', message: `Applying template: ${template.name}` };
+      try {
+        applyTemplate({ template, destDir, vars });
+        yield {
+          status: 'ok',
+          message: `Template applied: ${template.name} (${template.files.length} file${template.files.length === 1 ? '' : 's'})`,
+        };
+      } catch (err: unknown) {
+        yield {
+          status: 'error',
+          message: `Failed to apply template "${template.name}": ${(err as Error).message}`,
+        };
+      }
+    }
   }
 
   // ── Top-level scaffold generator ──────────────────────────────────────────
@@ -235,12 +294,18 @@ export abstract class BaseRuntimeEngine {
     return str.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key: string) => vars[key] ?? _);
   }
 
-  /** Flatten the structure's folder list into simple string names */
-  protected flattenFolders(folders: (string | Record<string, unknown>)[]): string[] {
-    return folders.flatMap((f) => {
-      if (typeof f === 'string') return [f];
-      return Object.keys(f);
-    });
+  // ── Folder helpers ────────────────────────────────────────────────────────
+
+  /**
+   * Flatten a mixed folder list `(string | Record<string, unknown>)[]`
+   * into plain string names.
+   */
+  protected flattenFolders(
+    folders: (string | Record<string, unknown>)[],
+  ): string[] {
+    return folders.flatMap((f) =>
+      typeof f === 'string' ? [f] : Object.keys(f),
+    );
   }
 
   // ── Git ───────────────────────────────────────────────────────────────────

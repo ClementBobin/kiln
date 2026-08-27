@@ -14,6 +14,7 @@ export default defineConfig({
     'engine/runtimes/dotnet':     'src/engine/runtimes/dotnet.runtime.ts',
     'engine/runtimes/node':       'src/engine/runtimes/node.runtime.ts',
     'engine/runtimes/kotlin':     'src/engine/runtimes/kotlin.runtime.ts',
+    'engine/template-loader':     'src/engine/template-loader.ts',
   },
   format: ['esm'],
   target: 'node18',
