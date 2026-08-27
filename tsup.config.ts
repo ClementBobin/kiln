@@ -10,6 +10,8 @@ export default defineConfig({
     'engine/config-loader':                 'src/engine/config-loader.ts',
     'engine/schema':                        'src/engine/schema.ts',
     'engine/template-loader':              'src/engine/template-loader.ts',
+    'engine/plugin-loader':                'src/engine/plugin-loader.ts',
+    'engine/plugin-engine':                'src/engine/plugin-engine.ts',
     'engine/runtimes/index':               'src/engine/runtimes/index.ts',
     'engine/runtimes/base.runtime':        'src/engine/runtimes/base.runtime.ts',
     'engine/runtimes/dotnet.runtime':      'src/engine/runtimes/dotnet.runtime.ts',

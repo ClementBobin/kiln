@@ -10,3 +10,4 @@ export * from './cli.js';
 export * from './runtime.js';
 export * from './structure.js';
 export * from './template.js';
+export * from './plugin.js';

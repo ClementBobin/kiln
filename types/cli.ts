@@ -7,6 +7,7 @@
 export interface PickOptions {
   output?: string;
   extraConfigs?: string[];
+  extraPlugins?: string[];
 }
 
 export interface HeadlessOptions {

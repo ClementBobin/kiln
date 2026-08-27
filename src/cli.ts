@@ -36,11 +36,13 @@ export async function run(): Promise<void> {
   program
     .option('-o, --output <dir>', 'Output directory (default: cwd)')
     .option('-c, --configs <dir>', 'Extra configs directory')
-    .action(async (opts: { output?: string; configs?: string }) => {
+    .option('-p, --plugins <dir>', 'Extra plugins directory')
+    .action(async (opts: { output?: string; configs?: string; plugins?: string }) => {
       const { runPick } = await import('./commands/pick.js');
       await runPick({
         output: opts.output,
         extraConfigs: opts.configs ? [opts.configs] : [],
+        extraPlugins: opts.plugins ? [opts.plugins] : [],
       });
     });
 
