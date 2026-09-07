@@ -1,0 +1,19 @@
+{
+  "name": "EF Core — Slow Query Interceptor",
+  "description": "Logs EF Core commands exceeding a configurable threshold, and resolves the calling repository method via a stack-trace walk.",
+  "tags": ["dotnet", "ef-core", "logging", "performance"],
+
+  "variables": [
+    { "key": "root_namespace", "label": "Root namespace", "default": "Api" },
+    { "key": "seuil_ms", "label": "Seuil (ms)", "default": "200" },
+    { "key": "repository_namespace_prefix", "label": "Repository namespace prefix", "default": "Api.Repository" }
+  ],
+
+  "apply": {
+    "type": "local"
+  },
+
+  "post_apply": [
+    { "cmd": "dotnet add package Microsoft.Extensions.Options", "label": "Ensure Microsoft.Extensions.Options is referenced" }
+  ]
+}

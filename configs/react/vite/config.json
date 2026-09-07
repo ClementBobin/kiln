@@ -1,0 +1,29 @@
+{
+  "name": "React — Vite",
+  "description": "React SPA with Vite, TypeScript, Tailwind CSS, React Query, and React Router v6.",
+
+  "source": {
+    "type": "command",
+    "commands": [
+      {
+        "cmd": "npm create vite@latest {{project_name}}",
+        "label": "Run Vite CLI generator"
+      }
+    ]
+  },
+
+  "structure": {
+    "templates": ["react_structure"]
+  },
+
+  "variables": [
+    { "key": "project_name", "label": "Project name",      "default": "my-app" },
+    { "key": "description",  "label": "Short description", "default": "A React application" }
+  ],
+
+  "code_conventions": {
+    "editorconfig": true,
+    "linter": { "enabled": true, "type": "eslint", "config_file": "eslint.config.mjs" },
+    "formatter": { "enabled": true, "type": "prettier" }
+  }
+}
