@@ -14,7 +14,8 @@
 
 import path from 'node:path';
 import fs from 'node:fs';
-import { select, input } from '@inquirer/prompts';
+import select from "@inquirer/select";
+import input from "@inquirer/input";
 import chalk from 'chalk';
 import process from 'node:process';
 import console from 'node:console';
