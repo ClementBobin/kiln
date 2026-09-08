@@ -266,7 +266,6 @@ export abstract class BaseRuntimeEngine {
     try {
       yield { status: 'running', message: 'Initialising git repository' };
       await this.gitInit(outputDir);
-      await this.gitCommit(outputDir);
       yield { status: 'ok', message: 'Git repository initialised' };
     } catch (err: unknown) {
       yield { status: 'warning', message: `git init skipped: ${(err as Error).message}` };
