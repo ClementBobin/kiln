@@ -1,5 +1,6 @@
 {
   "name": "Android — Kotlin MVVM",
+  "engine": "android",
   "tags": ["android", "kotlin", "mvvm", "jetpack-compose", "hilt", "retrofit", "room"],
   "description": "Android application with MVVM architecture, Jetpack Compose UI, Hilt dependency injection, Retrofit for networking, and Room for local persistence.",
 

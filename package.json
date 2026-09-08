@@ -1,6 +1,6 @@
 {
   "name": "kiln-scaffold",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "description": "Interactive CLI project scaffolding tool — scaffold any project in seconds",
   "keywords": [
     "cli",

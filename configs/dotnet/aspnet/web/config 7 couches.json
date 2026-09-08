@@ -2,6 +2,7 @@
   "name": "Config 7 Couches",
   "description": "Web API with Clean Architecture layers: Business, Business.Contracts, Entity, EntitiesContext, Repository, Repository.Contracts, WebApplications",
   "version": "1.0.0",
+  "engine": "dotnet",
   "tags": ["dotnet", "aspnet", "web", "clean-archi"],
 
   "structure": {

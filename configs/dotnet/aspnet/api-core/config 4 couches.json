@@ -2,6 +2,7 @@
   "name": "Config 4 Couches",
   "description": "REST API with Clean Architecture layers: Domain, Application, Infrastructure, Api",
   "version": "1.0.0",
+  "engine": "dotnet",
   "tags": ["dotnet", "aspnet", "api", "clean-archi"],
 
   "structure": {

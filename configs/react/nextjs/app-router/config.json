@@ -1,6 +1,7 @@
 {
   "name": "Next.js",
   "description": "Next.js application using the App Router, Tailwind CSS, TypeScript",
+  "engine": "node",
 
   "source": {
     "type": "command",
