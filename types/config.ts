@@ -10,29 +10,33 @@ import type { Structures } from "./index.js";
 // Config schema types
 // ──────────────────────────────────────────────────────────────────────────────
 
-export type SourceType = 'command' | 'local' | 'github' | 'script';
+export type SourceType = "command" | "local" | "github" | "script";
 
-export type RuntimeName = 'node' | 'dotnet' | 'kotlin' | 'android';
+/** Explicit engine enum — set this instead of relying on tags for runtime detection. */
+export type EngineType = "node" | "dotnet" | "kotlin" | "android";
+
+/** @deprecated Use EngineType instead. */
+export type RuntimeName = EngineType;
 
 export type LinterType =
-  | 'eslint'
-  | 'biome'
-  | 'oxc'
-  | 'pylint'
-  | 'ruff'
-  | 'ktlint'
-  | 'detekt'
-  | 'swiftlint'
-  | 'roslyn';
+  | "eslint"
+  | "biome"
+  | "oxc"
+  | "pylint"
+  | "ruff"
+  | "ktlint"
+  | "detekt"
+  | "swiftlint"
+  | "roslyn";
 
 export type FormatterType =
-  | 'prettier'
-  | 'biome'
-  | 'black'
-  | 'ruff'
-  | 'ktlint'
-  | 'swiftformat'
-  | 'dotnet-format';
+  | "prettier"
+  | "biome"
+  | "black"
+  | "ruff"
+  | "ktlint"
+  | "swiftformat"
+  | "dotnet-format";
 
 /**
  * A single shell step used in pre_init / check_dependencies / source.commands / post_init.
@@ -115,8 +119,12 @@ export interface KilnConfig {
    */
   check_dependencies?: CommandStep[] | null;
 
-  /** Runtime engine to use. Inferred from source/structure/tags when absent. */
-  runtime?: RuntimeName;
+  /**
+   * Runtime engine to use. When set, skips all inference logic.
+   * Prefer this over relying on tags for engine detection.
+   * Allowed values: 'node' | 'dotnet' | 'kotlin' | 'android'
+   */
+  engine?: EngineType;
 
   source?: ConfigSource;
   structure?: Structures;
