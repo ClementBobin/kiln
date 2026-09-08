@@ -47,7 +47,7 @@ export class DotNetRuntimeEngine extends BaseRuntimeEngine {
 
   protected get defaultPostInit(): CommandStep[] {
     return [
-      { cmd: 'dotnet restore {{project_name}}/{{project_name}}.sln', label: 'Restoring NuGet packages' },
+      { cmd: 'dotnet restore {{project_name}}/{{project_name}}.slnx', label: 'Restoring NuGet packages' },
     ];
   }
 
